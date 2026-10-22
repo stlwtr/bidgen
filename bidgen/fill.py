@@ -114,12 +114,6 @@ _RULES: List[Tuple[re.Pattern, Callable[[Dict[str, str]], str]]] = [
         re.compile(r"投标人名称\s*[（(]\s*加盖公章\s*[）)]\s*[：:]\s*_*"),
         lambda v: f"投标人名称（加盖公章）:{_ul(v['company'])}",
     ),
-    # 日期：____年____月____日 / 日期：年月日 / 日期：____  (value underlined)
-    # 锚定行首，避免误匹配“投标截止日期”等中间含“日期”的文本。
-    (
-        re.compile(r"^日\s*期\s*[：:][\s_]*(?:年[\s_]*月?[\s_]*日?|_)"),
-        lambda v: f"日期:{_ul(v['date'])}",
-    ),
 ]
 
 
@@ -134,8 +128,26 @@ def _ensure(values: Dict[str, str]) -> Dict[str, str]:
     return {key: (values.get(key) or PLACEHOLDER) for key in _VALUE_KEYS}
 
 
+# 日期规则（match-based，锚定行首以不误匹配“投标截止日期”）：
+# 已填日期 → 值+下划线；未填 → 把“____”替换为不间断空格+单下划线，保留 年/月/日 文字。
+_UNDERSCORE_RE = re.compile(r"_+")
+_DATE_RE = re.compile(r"^日\s*期\s*[：:](.*)$")
+
+
 def _apply(text: str, values: Dict[str, str]) -> str:
     values = _ensure(values)
+    date = values.get("date") or PLACEHOLDER
+
+    def date_repl(match: "re.Match[str]") -> str:
+        if date != PLACEHOLDER:
+            return "日期:" + _ul(date)
+        suffix = match.group(1)
+        # 原文无下划线（如"年月日"占位文字）→ 保留原文；有 ____ 才替换为不间断空格+单下划线
+        if "_" not in suffix:
+            return match.group(0)
+        return "日期:" + _UNDERSCORE_RE.sub(lambda m: _ul(PLACEHOLDER), suffix)
+
+    text = _DATE_RE.sub(date_repl, text)
     for pattern, replacement in _RULES:
         text = pattern.sub(replacement(values), text)
     return text

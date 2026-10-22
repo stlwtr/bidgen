@@ -108,11 +108,16 @@ def test_date_line():
 
 
 def test_date_placeholder_is_nbsp_plus_underline():
-    # V 不含 date（占位）：日期占位统一为“不间断空格 + 单下划线格式”
     nbsp = "\xa0" * 6
+    # 纯下划线 → 整段不间断空格
     assert fill.fill_line("日期：____________", V) == "日期:" + nbsp
-    assert fill.fill_line("日期：年月日", V) == "日期:" + nbsp
-    # “日期：”（无占位）不匹配日期规则，保留原文
+    # 保留 年/月/日，每个 ____ 替换为不间断空格 + 单下划线
+    assert fill.fill_line("日期：____年____月____日", V) == (
+        "日期:" + nbsp + "年" + nbsp + "月" + nbsp + "日"
+    )
+    # 年月日（无下划线）→ 保留占位文字
+    assert fill.fill_line("日期：年月日", V) == "日期：年月日"
+    # 日期：（无占位）→ 保留原文
     assert fill.fill_line("日期：", V) == "日期："
 
 
