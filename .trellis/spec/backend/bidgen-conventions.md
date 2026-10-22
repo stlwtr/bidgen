@@ -29,7 +29,7 @@
 
 - 中文字体必须同时设 `rPr.rFonts` 的 `w:eastAsia`；只设 `font.name` 对中文无效。
 - 首行缩进 2 字符用 `w:ind w:firstLineChars="200"`。
-- 一级标题自动编号：`numbering.xml` 注入 `abstractNum`（`numFmt="chineseCounting"`，`lvlText="%1"`，**`suff="nothing"`**——编号后无空格/制表位，呈现为 `一投标承诺书`）+ `num`，绑定 `Heading 1`；失败时降级为硬编码 `一、`。
+- 一级标题自动编号：`numbering.xml` 注入 `abstractNum`（`numFmt="chineseCounting"`，`lvlText="%1、"`，**`suff="nothing"`**——顿号紧贴标题，其后无空格/制表位，呈现为 `一、投标承诺书`）+ `num`，绑定 `Heading 1`；失败时降级为硬编码 `一、`。
 - 目录用普通段落（非 Heading），否则会被自动编号并污染 TOC。
 - 一级标题**左对齐**，且每个一级标题前设 `page_break_before`（`w:pageBreakBefore`）。
 - 正文段落**两端对齐**（`WD_ALIGN_PARAGRAPH.JUSTIFY`）；标题、封面、格式副标题等显式覆盖为居中/左对齐。

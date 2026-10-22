@@ -234,9 +234,9 @@ def _setup_heading_numbering(doc, spec: StyleSpec) -> bool:
         fmt = OxmlElement("w:numFmt")
         fmt.set(qn("w:val"), "chineseCounting")
         text = OxmlElement("w:lvlText")
-        text.set(qn("w:val"), "%1")
+        text.set(qn("w:val"), "%1、")
         suff = OxmlElement("w:suff")
-        suff.set(qn("w:val"), "nothing")  # 编号后无空格/制表位
+        suff.set(qn("w:val"), "nothing")  # 顿号紧贴标题，其后无空格/制表位
         jc = OxmlElement("w:lvlJc")
         jc.set(qn("w:val"), "left")
         for el in (start, fmt, suff, text, jc):
