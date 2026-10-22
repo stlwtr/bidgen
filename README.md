@@ -26,6 +26,9 @@ python3 -m venv .venv
 ## 使用
 
 ```bash
+# 图形界面（非技术人员推荐）：选择招标 PDF、填供应商信息、点生成
+.venv/bin/python -m bidgen gui
+
 # 1) 仅把招标文件 PDF 转为 Word
 .venv/bin/python -m bidgen convert "docs/招标文件.pdf" -o 招标文件.docx
 

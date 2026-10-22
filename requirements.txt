@@ -3,3 +3,4 @@ pdf2docx==0.5.8
 python-docx
 PyYAML
 pytest
+PySide6
