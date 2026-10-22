@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Sequence
 
 from docx import Document
 from docx.enum.section import WD_SECTION
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -153,7 +154,7 @@ def _add_table(doc, rows: Sequence[Sequence[str]], spec: StyleSpec) -> None:
     cols = max(len(r) for r in rows)
     table = doc.add_table(rows=0, cols=cols)
     table.style = "Table Grid"
-    for row in rows:
+    for r_idx, row in enumerate(rows):
         cells = table.add_row().cells
         for i in range(cols):
             value = (row[i] if i < len(row) else "").replace("\n", "")
@@ -162,6 +163,9 @@ def _add_table(doc, rows: Sequence[Sequence[str]], spec: StyleSpec) -> None:
             paragraph = cell.paragraphs[0]
             run = paragraph.add_run(_txt(value))
             _style_run(run, spec, spec.body_font, spec.table_size)
+            if r_idx == 0:  # 表头：水平居中 + 垂直居中
+                cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             paragraph.paragraph_format.line_spacing = 1.0
             paragraph.paragraph_format.space_before = Pt(0)
             paragraph.paragraph_format.space_after = Pt(0)
