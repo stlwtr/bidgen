@@ -31,7 +31,9 @@ class StyleSpec:
     heading_line_spacing: float = 1.0
     first_line_indent_chars: int = 2
 
-    # Page layout (cm)
+    # Page size (A4) and margins (cm)
+    page_width_cm: float = 21.0
+    page_height_cm: float = 29.7
     margin_top_cm: float = 2.54
     margin_bottom_cm: float = 2.54
     margin_left_cm: float = 3.17

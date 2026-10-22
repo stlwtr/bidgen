@@ -124,7 +124,7 @@ def fix(text: str) -> str:
 招标文件未规定投标文件版式（`research` 已核实），故按中文投标文件通用惯例设定；参数集中在 `bidgen/style.py` 的 `StyleSpec`，可整体覆盖。
 
 **页面**
-- 纸张 A4（21×29.7cm）。
+- 纸张 A4（21×29.7cm），通过 `section.page_width / page_height` 显式设置（`StyleSpec.page_width_cm / page_height_cm`）。
 - 页边距：上/下 2.54cm，左/右 3.17cm；装订线可另加左侧 0.5cm。
 - 页眉距边 1.5cm，页脚距边 1.75cm。
 

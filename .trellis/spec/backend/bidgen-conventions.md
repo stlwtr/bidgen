@@ -31,6 +31,8 @@
 
 ## DOCX 生成要点（python-docx）
 
+- 页面尺寸显式设 A4：`section.page_width = Cm(21)`、`section.page_height = Cm(29.7)`（`StyleSpec.page_width_cm / page_height_cm`）；页边距上/下 2.54cm、左/右 3.17cm。
+
 - 中文字体必须同时设 `rPr.rFonts` 的 `w:eastAsia`；只设 `font.name` 对中文无效。
 - 首行缩进 2 字符用 `w:ind w:firstLineChars="200"`。
 - 一级标题自动编号：`numbering.xml` 注入 `abstractNum`（`numFmt="chineseCounting"`，`lvlText="%1、"`，**`suff="nothing"`**——顿号紧贴标题，其后无空格/制表位，呈现为 `一、投标承诺书`）+ `num`，绑定 `Heading 1`；失败时降级为硬编码 `一、`。一级标题文本去掉编号前缀与"（如涉及）"字样（`_AS_INVOLVED_RE`）。

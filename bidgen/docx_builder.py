@@ -214,6 +214,8 @@ def _init_styles(doc, spec: StyleSpec) -> None:
 
 
 def _apply_layout(section, spec: StyleSpec) -> None:
+    section.page_width = Cm(spec.page_width_cm)
+    section.page_height = Cm(spec.page_height_cm)
     section.top_margin = Cm(spec.margin_top_cm)
     section.bottom_margin = Cm(spec.margin_bottom_cm)
     section.left_margin = Cm(spec.margin_left_cm)
