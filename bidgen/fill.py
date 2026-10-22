@@ -26,10 +26,11 @@ _UL_RE = re.compile(re.escape(UL_START) + r"(.*?)" + re.escape(UL_END), re.S)
 
 
 def _ul(value: str) -> str:
-    # 占位符用“空格 + 单下划线格式”呈现（Word 画一条单下划线），避免字面下划线
-    # 字符与 underline 格式叠加成“双线/加粗”效果。
+    # 占位符用“不间断空格 + 单下划线格式”。右对齐的签章行中，普通行尾空格
+    # （U+0020）的下划线 Word 默认不显示；不间断空格（U+00A0）的下划线始终显示，
+    # 可避免“日期占位在右对齐行中下划线不显示”的坑。
     if value == PLACEHOLDER:
-        value = "      "
+        value = "\xa0" * 6
     return f"{UL_START}{value}{UL_END}"
 
 
