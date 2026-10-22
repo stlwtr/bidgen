@@ -348,15 +348,14 @@ def _materials_section(doc, ctx: BidContext, spec: StyleSpec) -> None:
         ("3.技术评审", tech),
         ("4.商务评审", biz),
     ]
-    _add_paragraph(doc, "（一）招标文件要求提供的其他资料", spec, bold=True, space_after=4)
+    _add_heading(doc, "（一）招标文件要求提供的其他资料", 2, spec, numbered=False)
     for title, section in groups:
         _add_paragraph(doc, title, spec, space_before=2, space_after=2)
         if section is not None and not section.is_empty():
             for table_rows in section.tables:
                 _add_table(doc, table_rows, spec)
                 _add_paragraph(doc, "", spec, space_after=4)
-    _add_paragraph(doc, "（二）投标人认为需提供的其他资料", spec, bold=True, space_before=4,
-                   space_after=2)
+    _add_heading(doc, "（二）投标人认为需提供的其他资料", 2, spec, numbered=False)
 
 
 # --------------------------------------------------------------------------- #
