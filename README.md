@@ -32,15 +32,13 @@ python3 -m venv .venv
 
 ## 打包可执行文件（Win / Linux / macOS，供非技术人员双击运行）
 
-界面基于 PySide6，代码天然跨平台。要生成各平台**原生可执行文件**（无需装 Python），用 PyInstaller 在**对应平台**上分别打包（PyInstaller 不能跨平台打包）：
+界面基于 PySide6，代码天然跨平台。要生成各平台**原生可执行文件**（无需装 Python），在**对应平台**上运行一键打包脚本（自动创建 venv、安装依赖、PyInstaller 打包）：
 
-```bash
-pip install -r requirements.txt pyinstaller
+- **Windows**：双击 `scripts/build_windows.bat`（或命令行运行）→ `dist\BidgenGUI.exe`
+- **Linux**：`bash scripts/build_linux.sh` → `dist/BidgenGUI`
+- **macOS**：`bash scripts/build_macos.sh` → `dist/BidgenGUI.app`
 
-# Windows：python scripts/build_app.py   → dist/BidgenGUI.exe
-# Linux：  python3 scripts/build_app.py  → dist/BidgenGUI
-# macOS：  python3 scripts/build_app.py  → dist/BidgenGUI.app
-```
+> PyInstaller 不能跨平台打包，必须在目标平台上运行对应脚本。
 
 ```bash
 # 1) 仅把招标文件 PDF 转为 Word
