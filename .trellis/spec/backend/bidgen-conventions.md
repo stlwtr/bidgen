@@ -7,7 +7,7 @@
 `pdf_reader`（PyMuPDF 读取）→ `reflow`（行→段落）→ `structure` / `extract`（解析）→ `docx_builder`（生成）。
 生成时对每个格式 body 先经 `fill` 用采集值填充空位，再经 `punctuation` 规范化。
 **所有章节仅遵照招标文件模板原文输出**，不附加自造的采购人头部、签署块或"（本部分由供应商…）"提示段。
-`fill` 用私有区哨兵（`U+E000`/`U+E001`）标记需下划线的值（项目名称 / 项目编号 / 投标人名称 / 日期），由 `docx_builder._add_runs` 拆成 `run.font.underline` 的 run；哨兵不写入 DOCX。**占位符用"空格 + 单下划线格式"**（`_ul` 把 `PLACEHOLDER` 换成空格，Word 画单下划线），避免字面下划线字符与 underline 格式叠加成双线；日期规则锚定行首以不误匹配"投标截止日期"。
+`fill` 用私有区哨兵（`U+E000`/`U+E001`）标记需下划线的值（项目名称 / 项目编号 / 投标人名称），由 `docx_builder._add_runs` 拆成 `run.font.underline` 的 run；哨兵不写入 DOCX；这些值的占位符用"空格 + 单下划线格式"（`_ul` 把 `PLACEHOLDER` 换成空格）。**日期规则为 match-based**（`_DATE_RE = ^日\s*期\s*[：:](.*)$`，锚定行首）：已填日期则填值；未填则**保留招标文件原文**（日期后有下划线则显示字面下划线，没有则保留"年月日"占位文字），不再强制 underline。
 `structure` / `extract` 只产出纯数据（dataclass / dict），不触 Word；`docx_builder` 只消费数据，不解析 PDF。
 
 ## 文本处理管道（顺序不可乱）
