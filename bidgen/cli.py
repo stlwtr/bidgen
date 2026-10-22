@@ -12,10 +12,14 @@ from .style import StyleSpec
 
 
 def _build_context(pdf: str, supplier_path: Optional[str], spec: StyleSpec) -> docx_builder.BidContext:
+    print("[bidgen] 1/5 读取 PDF 表格…", flush=True)
     tables = pdf_reader.read_tables(pdf)
+    print("[bidgen] 2/5 读取 PDF 文本行…", flush=True)
     lines = pdf_reader.read_lines(pdf, tables)
+    print("[bidgen] 3/5 重建段落与结构…", flush=True)
     paragraphs = reflow.rebuild_paras(lines)
     template = structure.build_template(paragraphs, tables)
+    print("[bidgen] 4/5 提取字段与内容…", flush=True)
     fields = extract.extract_fields(lines)
     return docx_builder.BidContext(
         template=template,
@@ -47,6 +51,7 @@ def _convert(pdf: str, out: str, do_sanitize: bool) -> str:
 
 def _generate(pdf: str, out: str, supplier: Optional[str], do_sanitize: bool) -> str:
     ctx = _build_context(pdf, supplier, StyleSpec())
+    print("[bidgen] 5/5 生成 Word 文档…", flush=True)
     document = docx_builder.build_bid_document(ctx)
     document.save(out)
     if do_sanitize:
