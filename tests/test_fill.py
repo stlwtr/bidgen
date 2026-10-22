@@ -107,8 +107,9 @@ def test_date_line():
     assert fill.fill_line("投标截止日期:2025年6月15日", values) == "投标截止日期:2025年6月15日"
 
 
-def test_date_placeholder_follows_tender():
-    # V 不含 date（占位）：招标文件日期后有下划线则显示下划线，没有（年月日）则保留占位文字
-    assert fill.fill_line("日期：____________", V) == "日期:____________"
-    assert fill.fill_line("日期：年月日", V) == "日期:年月日"
-    assert fill.fill_line("日期：", V) == "日期:"
+def test_date_placeholder_is_space_plus_underline():
+    # V 不含 date（占位）：日期占位统一为“空格 + 单下划线格式”（哨兵剥除后为空格）
+    assert fill.fill_line("日期：____________", V) == "日期:      "
+    assert fill.fill_line("日期：年月日", V) == "日期:      "
+    # “日期：”（无占位）不匹配日期规则，保留原文
+    assert fill.fill_line("日期：", V) == "日期："

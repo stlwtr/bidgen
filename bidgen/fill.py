@@ -108,6 +108,12 @@ _RULES: List[Tuple[re.Pattern, Callable[[Dict[str, str]], str]]] = [
         re.compile(r"投标人名称\s*[（(]\s*加盖公章\s*[）)]\s*[：:]\s*_*"),
         lambda v: f"投标人名称（加盖公章）:{_ul(v['company'])}",
     ),
+    # 日期：____年____月____日 / 日期：年月日 / 日期：____  (value underlined)
+    # 锚定行首，避免误匹配“投标截止日期”等中间含“日期”的文本。
+    (
+        re.compile(r"^日\s*期\s*[：:][\s_]*(?:年[\s_]*月?[\s_]*日?|_)"),
+        lambda v: f"日期:{_ul(v['date'])}",
+    ),
 ]
 
 
@@ -122,22 +128,8 @@ def _ensure(values: Dict[str, str]) -> Dict[str, str]:
     return {key: (values.get(key) or PLACEHOLDER) for key in _VALUE_KEYS}
 
 
-# 日期规则（单独处理，match-based）：按招标文件原文决定日期占位——
-# 原文日期后有下划线则显示下划线（字面字符，不加粗），没有（如"年月日"）则保留占位文字；
-# 供应商已填日期则填实际值。锚定行首以不误匹配"投标截止日期"。
-_DATE_RE = re.compile(r"^日\s*期\s*[：:](.*)$")
-
-
 def _apply(text: str, values: Dict[str, str]) -> str:
     values = _ensure(values)
-    date = values.get("date") or ""
-
-    def date_repl(match: "re.Match[str]") -> str:
-        if date and date != PLACEHOLDER:
-            return "日期:" + date
-        return "日期:" + match.group(1)
-
-    text = _DATE_RE.sub(date_repl, text)
     for pattern, replacement in _RULES:
         text = pattern.sub(replacement(values), text)
     return text
