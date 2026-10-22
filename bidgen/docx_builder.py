@@ -394,6 +394,11 @@ def _cover_package_text(cover_lines) -> str:
     return "【第____包】"
 
 
+def _cover_date_text(ctx: BidContext) -> str:
+    """封面日期：供应商已填用其值，否则保留招标文件占位格式"年 月 日"。"""
+    return ctx.supplier.get("date") or "年 月 日"
+
+
 def _render_cover(doc, ctx: BidContext, spec: StyleSpec) -> None:
     """Cover following the tender's own field order (see template.cover_lines)."""
     _add_paragraph(doc, "", spec, space_after=0)
@@ -415,10 +420,10 @@ def _render_cover(doc, ctx: BidContext, spec: StyleSpec) -> None:
         elif key == "bidder":
             info(f"投标人:{config.value(ctx.supplier, 'company_name')}")
         elif key == "date":
-            info(config.value(ctx.supplier, "date"))
+            info(_cover_date_text(ctx))
             date_done = True
     if not date_done:
-        info(config.value(ctx.supplier, "date"))
+        info(_cover_date_text(ctx))
 
 
 # --------------------------------------------------------------------------- #
