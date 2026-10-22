@@ -52,8 +52,7 @@ class BidContext:
 
 
 def _txt(text: str) -> str:
-    # 全文先把 `_+` 替换为“等长不间断空格 + 单下划线”，再做标点规范化。
-    return punctuation.normalize(fill.underscore_to_ul(text)) if text else text
+    return punctuation.normalize(text) if text else text
 
 
 # --------------------------------------------------------------------------- #
@@ -79,7 +78,12 @@ def _set_first_line_indent(paragraph, chars: int, size: float) -> None:
 
 
 def _add_runs(paragraph, text: str, spec: StyleSpec, font: str, size: float, bold: bool) -> None:
-    """Write *text* as runs, underlining the spans marked by fill.split_markup."""
+    """Write *text* as runs, underlining the spans marked by fill.split_markup.
+
+    下划线字符 `_+` 在此入口一次性替换为“等长不间断空格 + 哨兵”，随后哨兵被
+    split_markup 拆分渲染为单下划线（避免哨兵泄漏成乱码）。
+    """
+    text = fill.underscore_to_ul(text)
     for segment, underlined in fill.split_markup(text):
         if segment == "":
             continue
@@ -162,8 +166,7 @@ def _add_table(doc, rows: Sequence[Sequence[str]], spec: StyleSpec) -> None:
             cell = cells[i]
             cell.text = ""
             paragraph = cell.paragraphs[0]
-            run = paragraph.add_run(_txt(value))
-            _style_run(run, spec, spec.body_font, spec.table_size)
+            _add_runs(paragraph, value, spec, spec.body_font, spec.table_size, False)
             if r_idx == 0:  # 表头：水平居中 + 垂直居中
                 cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
