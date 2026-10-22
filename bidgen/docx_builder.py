@@ -366,6 +366,57 @@ def _materials_section(doc, ctx: BidContext, spec: StyleSpec) -> None:
     _add_heading(doc, "（二）投标人认为需提供的其他资料", 2, spec, numbered=False)
 
 
+_COVER_FIELD_PATTERNS = [
+    ("package", re.compile(r"第\s*_\s*包")),
+    ("name", re.compile(r"项目名称\s*[：:]")),
+    ("code", re.compile(r"项目编号\s*[：:]")),
+    ("bidder", re.compile(r"投标人\s*[：:]")),
+    ("date", re.compile(r"年\s*月\s*日")),
+]
+
+
+def _cover_field_order(cover_lines) -> List[str]:
+    """Field order of the cover, taken from the tender's own cover template."""
+    text = "\n".join(cover_lines)
+    found = [(rx.search(text).start(), key) for key, rx in _COVER_FIELD_PATTERNS if rx.search(text)]
+    return [key for _, key in sorted(found)]
+
+
+def _cover_package_text(cover_lines) -> str:
+    for line in cover_lines:
+        match = re.search(r"[【\[]第\s*_\s*包\s*[】\]][^\n]*", line)
+        if match:
+            return match.group(0).strip()
+    return "【第____包】"
+
+
+def _render_cover(doc, ctx: BidContext, spec: StyleSpec) -> None:
+    """Cover following the tender's own field order (see template.cover_lines)."""
+    _add_paragraph(doc, "", spec, space_after=0)
+    _add_paragraph(doc, "投标文件", spec, font=spec.heading_font, size=spec.cover_title_size,
+                   bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=120, space_after=60)
+
+    def info(text):
+        return _add_paragraph(doc, text, spec, size=spec.cover_info_size,
+                              align=WD_ALIGN_PARAGRAPH.CENTER, space_after=12)
+
+    date_done = False
+    for key in _cover_field_order(ctx.template.cover_lines):
+        if key == "package":
+            info(_cover_package_text(ctx.template.cover_lines))
+        elif key == "name":
+            info(f"项目名称:{ctx.fields.get('project_name') or '______'}")
+        elif key == "code":
+            info(f"项目编号:{ctx.fields.get('project_code') or '______'}")
+        elif key == "bidder":
+            info(f"投标人:{config.value(ctx.supplier, 'company_name')}")
+        elif key == "date":
+            info(config.value(ctx.supplier, "date"))
+            date_done = True
+    if not date_done:
+        info(config.value(ctx.supplier, "date"))
+
+
 # --------------------------------------------------------------------------- #
 # Document assembly
 # --------------------------------------------------------------------------- #
@@ -375,20 +426,8 @@ def build_bid_document(ctx: BidContext) -> Document:
     _init_styles(doc, spec)
     _apply_layout(doc.sections[0], spec)
 
-    # Cover (its own section, no header / footer).
-    _add_paragraph(doc, "", spec, space_after=0)
-    _add_paragraph(doc, "投标文件", spec, font=spec.heading_font, size=spec.cover_title_size,
-                   bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=120, space_after=60)
-    _add_paragraph(doc, f"项目名称：{ctx.fields.get('project_name') or '______'}", spec,
-                   size=spec.cover_info_size, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=12)
-    _add_paragraph(doc, f"项目编号：{ctx.fields.get('project_code') or '______'}", spec,
-                   size=spec.cover_info_size, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=12)
-    _add_paragraph(doc, f"投标人：{config.value(ctx.supplier, 'company_name')}", spec,
-                   size=spec.cover_info_size, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=12)
-    _add_paragraph(doc, "【第____包】", spec, size=spec.cover_info_size,
-                   align=WD_ALIGN_PARAGRAPH.CENTER, space_after=12)
-    _add_paragraph(doc, config.value(ctx.supplier, "date"), spec, size=spec.cover_info_size,
-                   align=WD_ALIGN_PARAGRAPH.CENTER)
+    # Cover (its own section, no header / footer), following the tender's field order.
+    _render_cover(doc, ctx, spec)
 
     # Content section onwards.
     content_section = doc.add_section(WD_SECTION.NEW_PAGE)

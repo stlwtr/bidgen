@@ -38,6 +38,7 @@
 - 模板 body 行加粗按 PDF 字体识别（`font` 含 `Bold` 或 `flags & 16`，占比 ≥ 0.6）→ `Line.bold` → `Paragraph.bold` → `BodyLine.bold` → run 加粗。
 - 招标文件中"独占一页"的小块（整页只有该内容、无跨页段落、字数 < 700）在投标文件中保持独立页（`reflow.independent_pages` → `BodyLine.own_page` → `page_break_before`）。
 - 附件标题行（`_ATTACHMENT_TITLE_RE` = `^附件\s*[一二三四五六七八九十\d]*\s*[：:]?\s*$`，如 `附件：`、`附件 1:`）强制另起一页（`page_break_before`）；正文中的"附件：xxx"不受影响。
+- 封面按招标文件封面模板（`template.cover_lines`）的字段顺序生成（`_cover_field_order`）；字段标签必须带冒号（`项目名称：`、`项目编号：`、`投标人：`），避免误匹配说明文字；`【第_包】` 用模板原文（`_cover_package_text`）。
 - 表格：`read_lines(path, tables)` 用 `read_tables()` 的 bbox 标记 `Line.in_table`，`reflow` 剔除之；`structure._assign_tables` 按页归属到 `Format.tables`（并记 `table_spans=(page, top)`）；`docx_builder` 在 body 内**按 `(page, top)` 顺序插入表格**；**格式六（技术偏离表）从招标文件提供的模板提取**（渲染模板表格原样骨架，按 `(page, top)` 插入，位于居中题名与"说明"之间）。
 - **格式十六（各类证明材料）为定制输出**：`（一）招标文件要求提供的其他资料`（**二级标题**）下按类别附表——`1.资格审查`（资格审查表）、`2.符合性审查`（符合性审查表）、`3.技术评审`（综合评分表·技术部分）、`4.商务评审`（综合评分表·商务/价格部分，`extract.split_scoring` 按标记行拆分），随后 `（二）投标人认为需提供的其他资料`（**二级标题**）；资格承诺函不再插入这些表格（`_business_tables` 已移除）。
 - 表格续页合并：`_is_continuation` 允许"商务评审"等**标签数据行**续页（非数字、非空、非表头词），保证跨页表格（如综合评分表）完整。
