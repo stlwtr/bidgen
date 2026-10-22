@@ -26,6 +26,10 @@ _UL_RE = re.compile(re.escape(UL_START) + r"(.*?)" + re.escape(UL_END), re.S)
 
 
 def _ul(value: str) -> str:
+    # 占位符用“空格 + 单下划线格式”呈现（Word 画一条单下划线），避免字面下划线
+    # 字符与 underline 格式叠加成“双线/加粗”效果。
+    if value == PLACEHOLDER:
+        value = "      "
     return f"{UL_START}{value}{UL_END}"
 
 
@@ -104,9 +108,10 @@ _RULES: List[Tuple[re.Pattern, Callable[[Dict[str, str]], str]]] = [
         re.compile(r"投标人名称\s*[（(]\s*加盖公章\s*[）)]\s*[：:]\s*_*"),
         lambda v: f"投标人名称（加盖公章）:{v['company']}",
     ),
-    # 日期：____年____月____日  /  日期：年月日  (value underlined)
+    # 日期：____年____月____日 / 日期：年月日 / 日期：____  (value underlined)
+    # 锚定行首，避免误匹配“投标截止日期”等中间含“日期”的文本。
     (
-        re.compile(r"日\s*期\s*[：:][\s_]*年[\s_]*月?[\s_]*日?"),
+        re.compile(r"^日\s*期\s*[：:][\s_]*(?:年[\s_]*月?[\s_]*日?|_)"),
         lambda v: f"日期:{_ul(v['date'])}",
     ),
 ]
