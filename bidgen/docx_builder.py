@@ -18,6 +18,7 @@ from .extract import Section
 from .style import StyleSpec
 
 _TOC_PREFIX_RE = re.compile(r"^[一二三四五六七八九十]+[、.]\s*")
+_AS_INVOLVED_RE = re.compile(r"[（(]\s*如涉及\s*[）)]")
 
 # 位置 = 投标文件目录序号
 #   1=投标承诺书 2=资格承诺函 3=授权委托书 5=主要商务要求承诺书
@@ -399,7 +400,7 @@ def build_bid_document(ctx: BidContext) -> Document:
     toc_items = ctx.template.toc_items
     fill_values = fill.build_values(ctx.fields, ctx.supplier)
     for position, item in enumerate(toc_items, start=1):
-        title = _TOC_PREFIX_RE.sub("", item.strip())
+        title = _AS_INVOLVED_RE.sub("", _TOC_PREFIX_RE.sub("", item.strip())).strip()
         if not numbered:
             title = item.strip()  # keep the manual "一、" prefix as a fallback
         _add_heading(doc, title, 1, spec, numbered=numbered)
