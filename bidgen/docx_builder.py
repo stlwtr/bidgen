@@ -31,6 +31,10 @@ _ALIGN_BY_NAME = {
     "center": WD_ALIGN_PARAGRAPH.CENTER,
 }
 
+# A standalone "附件：/附件 1:/附件一：" title line starts on a fresh page,
+# matching the tender's convention that each attachment begins a new page.
+_ATTACHMENT_TITLE_RE = re.compile(r"^附件\s*[一二三四五六七八九十\d]*\s*[：:]?\s*$")
+
 
 @dataclass
 class BidContext:
@@ -430,6 +434,8 @@ def build_bid_document(ctx: BidContext) -> Document:
                         break_before = True        # a different self-contained page follows
                     elif not line.own_page and prev.own_page:
                         break_before = True        # the self-contained block ends here
+                if _ATTACHMENT_TITLE_RE.match(line.text):
+                    break_before = True            # 附件标题另起一页（与招标文件一致）
                 align = _ALIGN_BY_NAME.get(line.align, WD_ALIGN_PARAGRAPH.JUSTIFY)
                 indent = spec.first_line_indent_chars if align == WD_ALIGN_PARAGRAPH.JUSTIFY else 0
                 _add_paragraph(doc, fill.fill_marked(line.text, fill_values), spec,

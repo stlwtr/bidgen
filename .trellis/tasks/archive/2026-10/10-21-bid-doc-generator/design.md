@@ -149,6 +149,7 @@ def fix(text: str) -> str:
 - 模板 body 行的对齐**按其在 PDF 中的水平位置识别**（`structure._classify`：`x1` 贴近右边距且左移→右对齐；左右留白近似相等→居中），识别不出的一律两端对齐；生成签署块中的"投标人名称 / 日期"行固定右对齐。
 - 模板 body 行的**加粗**按 PDF 字体识别（span `font` 含 `Bold` 或 `flags & 16`，加粗字符占比 ≥ 0.6），贯通 `Line.bold` → `Paragraph.bold`（取段落首行）→ `BodyLine.bold` → run 加粗。
 - 招标文件中**独占一页**的小块（整页只有该内容、无段落跨页、正文字数 < `_OWN_PAGE_MAX_CHARS=700`）在投标文件中保持独立页：块首、块后各分页一次（`reflow.independent_pages` → `structure.BodyLine.own_page` → `docx_builder` 的 `page_break_before`）。
+- **附件标题行**（`_ATTACHMENT_TITLE_RE` = `^附件\s*[一二三四五六七八九十\d]*\s*[：:]?\s*$`，如 `附件：`、`附件 1:`、`附件一：`）强制另起一页（`page_break_before`），与招标文件"附件另起一页"的排版惯例一致；正文中的"附件：xxx"（如 `附件：具体标的…`）不受影响。
 
 **编号**
 - 一级标题走 Word 多级列表自动编号，`numFmt="chineseCounting"`，`lvlText="%1、"`、`suff="nothing"` → 呈现为 `一、投标承诺书`、`二、资格承诺函`…（**顿号后无空格/制表位**），绑定 `Heading 1` 样式（非硬编码序号）。
