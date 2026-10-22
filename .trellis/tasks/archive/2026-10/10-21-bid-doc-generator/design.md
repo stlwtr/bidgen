@@ -151,7 +151,7 @@ def fix(text: str) -> str:
 - 招标文件中**独占一页**的小块（整页只有该内容、无段落跨页、正文字数 < `_OWN_PAGE_MAX_CHARS=700`）在投标文件中保持独立页：块首、块后各分页一次（`reflow.independent_pages` → `structure.BodyLine.own_page` → `docx_builder` 的 `page_break_before`）。
 
 **编号**
-- 一级标题走 Word 多级列表自动编号，`numFmt="chineseCounting"` → 呈现为 `一、二、三…`，绑定 `Heading 1` 样式（非硬编码序号）。
+- 一级标题走 Word 多级列表自动编号，`numFmt="chineseCounting"`，`lvlText="%1"`、`suff="nothing"` → 呈现为 `一投标承诺书`、`二资格承诺函`…（**编号后无空格/制表位**），绑定 `Heading 1` 样式（非硬编码序号）。
 - 二级标题可选 `（一）`（`numFmt="chineseCounting"` 加括号）或 `1.`。
 
 **页眉页脚**
