@@ -18,5 +18,9 @@ dist/
 /*.docx
 /*.doc
 
+# PyInstaller 打包产物
+/build/
+/dist/
+
 # 编辑器 / 系统
 .DS_Store

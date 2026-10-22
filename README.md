@@ -28,7 +28,21 @@ python3 -m venv .venv
 ```bash
 # 图形界面（非技术人员推荐）：选择招标 PDF、填供应商信息、点生成
 .venv/bin/python -m bidgen gui
+```
 
+## 打包可执行文件（Win / Linux / macOS，供非技术人员双击运行）
+
+界面基于 PySide6，代码天然跨平台。要生成各平台**原生可执行文件**（无需装 Python），用 PyInstaller 在**对应平台**上分别打包（PyInstaller 不能跨平台打包）：
+
+```bash
+pip install -r requirements.txt pyinstaller
+
+# Windows：python scripts/build_app.py   → dist/BidgenGUI.exe
+# Linux：  python3 scripts/build_app.py  → dist/BidgenGUI
+# macOS：  python3 scripts/build_app.py  → dist/BidgenGUI.app
+```
+
+```bash
 # 1) 仅把招标文件 PDF 转为 Word
 .venv/bin/python -m bidgen convert "docs/招标文件.pdf" -o 招标文件.docx
 
