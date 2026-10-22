@@ -22,5 +22,8 @@ dist/
 /build/
 /dist/
 
+# GUI 运行时供应商档案数据
+/suppliers/
+
 # 编辑器 / 系统
 .DS_Store

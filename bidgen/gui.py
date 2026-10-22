@@ -2,10 +2,10 @@
 
 用法：`bidgen gui`（或 `python -m bidgen gui`）。
 - 「生成」页：选择招标文件 PDF 与输出目录，点"生成投标文件"，转换过程有真实进度条。
-- 「设置」页：维护供应商信息（可加载 / 保存 supplier.yaml）。
+- 「设置」菜单 →「供应商设置」：管理多个供应商配置（新建 / 编辑 / 删除 / 设为当前）。
+- 「帮助」菜单 →「关于」：功能说明，科创研发室提供支持。
 
-界面现代化（浅色卡片风）；后台线程生成，fd 级捕获 pdf2docx 页进度与 [bidgen] 阶段
-进度，实时更新进度条。
+界面现代化（浅色卡片风）；后台线程生成，fd 级捕获 pdf2docx 页进度与 [bidgen] 阶段进度。
 """
 
 from __future__ import annotations
@@ -20,8 +20,9 @@ import threading
 import yaml
 from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout, QGroupBox,
-    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QProgressBar,
+    QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+    QFormLayout, QGroupBox, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
+    QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QProgressBar,
     QPushButton, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
 )
 
@@ -77,17 +78,75 @@ QProgressBar {
     height: 16px; text-align: center; color: #2d3748;
 }
 QProgressBar::chunk { background: #4a7dff; border-radius: 5px; }
-QTextEdit { background: #ffffff; border: 1px solid #e4e8f0; border-radius: 8px; padding: 6px; }
+QTextEdit, QListWidget { background: #ffffff; border: 1px solid #e4e8f0; border-radius: 8px; padding: 6px; }
 QTabWidget::pane { border: none; }
 QTabBar::tab { background: transparent; padding: 8px 20px; border-radius: 6px; color: #4a5568; }
 QTabBar::tab:selected { background: #4a7dff; color: #ffffff; }
 QCheckBox { color: #2d3748; }
+QMenuBar { background: #ffffff; border-bottom: 1px solid #e4e8f0; }
+QMenu { background: #ffffff; border: 1px solid #e4e8f0; }
+QMenu::item:selected { background: #4a7dff; color: #ffffff; }
 """
 
 
-class _QueueWriter:
-    """把输出按行写入队列（供 print 捕获；logging 另由 fd 重定向捕获）。"""
+# --------------------------------------------------------------------------- #
+# 供应商配置存储（多档案，可选中当前使用的）
+# --------------------------------------------------------------------------- #
+class SupplierStore:
+    """把多个供应商配置存为 suppliers/<名称>.yaml，并记录当前使用的档案。"""
 
+    _CURRENT_FILE = ".current"
+
+    def __init__(self, root: str = "suppliers") -> None:
+        self.root = root
+        os.makedirs(self.root, exist_ok=True)
+        if not self.list():
+            self.save("默认供应商", {"company_type": "企业"})
+
+    def _path(self, name: str) -> str:
+        return os.path.join(self.root, name + ".yaml")
+
+    def list(self) -> list[str]:
+        names = [os.path.splitext(f)[0] for f in os.listdir(self.root) if f.endswith(".yaml")]
+        return sorted(names)
+
+    def load(self, name: str) -> dict:
+        try:
+            with open(self._path(name), encoding="utf-8") as handle:
+                return yaml.safe_load(handle) or {}
+        except FileNotFoundError:
+            return {}
+
+    def save(self, name: str, data: dict) -> None:
+        with open(self._path(name), "w", encoding="utf-8") as handle:
+            yaml.safe_dump(data, handle, allow_unicode=True)
+
+    def delete(self, name: str) -> None:
+        try:
+            os.remove(self._path(name))
+        except FileNotFoundError:
+            pass
+
+    def current(self) -> str:
+        try:
+            with open(os.path.join(self.root, self._CURRENT_FILE), encoding="utf-8") as handle:
+                name = handle.read().strip()
+                if name and os.path.exists(self._path(name)):
+                    return name
+        except FileNotFoundError:
+            pass
+        names = self.list()
+        return names[0] if names else "默认供应商"
+
+    def set_current(self, name: str) -> None:
+        with open(os.path.join(self.root, self._CURRENT_FILE), "w", encoding="utf-8") as handle:
+            handle.write(name)
+
+
+# --------------------------------------------------------------------------- #
+# 后台生成线程（fd 级捕获进度）
+# --------------------------------------------------------------------------- #
+class _QueueWriter:
     def __init__(self, q: "queue.Queue[str]") -> None:
         self.q = q
         self._buf = ""
@@ -105,10 +164,8 @@ class _QueueWriter:
 
 
 class Worker(QThread):
-    """后台生成线程；fd 级重定向捕获 pdf2docx 页进度与 [bidgen] 阶段进度。"""
-
     log = Signal(str)
-    progress = Signal(int, int, str)  # value, maximum, label
+    progress = Signal(int, int, str)
     done = Signal(bool, str)
 
     def __init__(self, pdf: str, outdir: str, supplier_path: str, with_tender: bool):
@@ -155,7 +212,6 @@ class Worker(QThread):
                     self.q.put(line)
 
     def poll(self) -> None:
-        """主线程定时调用：把队列中的行转成进度 / 日志信号。"""
         try:
             while True:
                 self._handle(self.q.get_nowait())
@@ -179,6 +235,124 @@ class Worker(QThread):
         self.log.emit(line)
 
 
+# --------------------------------------------------------------------------- #
+# 供应商设置对话框（多档案管理）
+# --------------------------------------------------------------------------- #
+class SupplierEditDialog(QDialog):
+    """编辑单个供应商档案。"""
+
+    def __init__(self, store: SupplierStore, name: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("编辑供应商：" + name)
+        self._fields: dict[str, QLineEdit] = {}
+        lay = QVBoxLayout(self)
+        form = QFormLayout()
+        data = store.load(name)
+        for key, label in _SUPPLIER_FIELDS:
+            edit = QLineEdit(str(data.get(key, "")))
+            self._fields[key] = edit
+            form.addRow(label, edit)
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(_COMPANY_TYPES)
+        self.type_combo.setCurrentText(data.get("company_type", "企业"))
+        form.addRow("供应商类型", self.type_combo)
+        lay.addLayout(form)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        lay.addWidget(buttons)
+
+    def data(self) -> dict:
+        data = {k: e.text().strip() for k, e in self._fields.items()}
+        data["company_type"] = self.type_combo.currentText()
+        return {k: v for k, v in data.items() if v}
+
+
+class SupplierManagerDialog(QDialog):
+    """供应商设置：管理多个供应商配置（新建 / 编辑 / 删除 / 设为当前）。"""
+
+    def __init__(self, store: SupplierStore, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.store = store
+        self.setWindowTitle("供应商设置")
+        self.resize(460, 500)
+
+        lay = QVBoxLayout(self)
+        lay.addWidget(QLabel("供应商配置（双击编辑；「设为当前」用于生成投标文件）"))
+        self.listw = QListWidget()
+        self.listw.itemDoubleClicked.connect(self.edit_item)
+        lay.addWidget(self.listw, 1)
+
+        btns = QHBoxLayout()
+        for text, fn in [
+            ("新建", self.add),
+            ("编辑", self.edit_selected),
+            ("删除", self.delete_selected),
+            ("设为当前", self.set_current),
+        ]:
+            btn = QPushButton(text)
+            btn.clicked.connect(fn)
+            btns.addWidget(btn)
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(self.accept)
+        btns.addWidget(close_btn)
+        lay.addLayout(btns)
+
+        self.refresh()
+
+    def refresh(self) -> None:
+        current = self.store.current()
+        self.listw.clear()
+        for name in self.store.list():
+            item = QListWidgetItem(("✓ " if name == current else "   ") + name)
+            if name == current:
+                font = item.font()
+                font.setBold(True)
+                item.setFont(font)
+            self.listw.addItem(item)
+
+    def _selected_name(self) -> str | None:
+        item = self.listw.currentItem()
+        return item.text().lstrip("✓ ").strip() if item else None
+
+    def add(self) -> None:
+        name, ok = QInputDialog.getText(self, "新建供应商", "供应商名称：")
+        name = name.strip()
+        if ok and name:
+            self.store.save(name, {"company_name": name, "company_type": "企业"})
+            self.refresh()
+            self._edit(name)
+
+    def edit_selected(self) -> None:
+        name = self._selected_name()
+        if name:
+            self._edit(name)
+
+    def edit_item(self, item: QListWidgetItem) -> None:
+        self._edit(item.text().lstrip("✓ ").strip())
+
+    def _edit(self, name: str) -> None:
+        dlg = SupplierEditDialog(self.store, name, self)
+        if dlg.exec():
+            self.store.save(name, dlg.data())
+            self.refresh()
+
+    def delete_selected(self) -> None:
+        name = self._selected_name()
+        if name and QMessageBox.question(self, "删除", f"删除供应商「{name}」？") == QMessageBox.Yes:
+            self.store.delete(name)
+            self.refresh()
+
+    def set_current(self) -> None:
+        name = self._selected_name()
+        if name:
+            self.store.set_current(name)
+            self.refresh()
+
+
+# --------------------------------------------------------------------------- #
+# 主窗口
+# --------------------------------------------------------------------------- #
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
@@ -186,9 +360,13 @@ class MainWindow(QMainWindow):
         self.resize(680, 800)
         self.setStyleSheet(_QSS)
         self._worker: Worker | None = None
+        self.store = SupplierStore()
+        self._loading_supplier = False
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.poll_worker)
+
+        self._build_menus()
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -207,6 +385,38 @@ class MainWindow(QMainWindow):
         lay.addWidget(self.tabs, 1)
         self.tabs.addTab(self._build_generate_tab(), "生成")
         self.tabs.addTab(self._build_settings_tab(), "设置")
+
+        self._reload_current_supplier()
+
+    # ------------------------------------------------------------------ #
+    # 菜单
+    # ------------------------------------------------------------------ #
+    def _build_menus(self) -> None:
+        settings_menu = self.menuBar().addMenu("设置")
+        settings_menu.addAction("供应商设置…", self.open_supplier_manager)
+        help_menu = self.menuBar().addMenu("帮助")
+        help_menu.addAction("关于 投标文件生成助手…", self.show_about)
+
+    def open_supplier_manager(self) -> None:
+        dlg = SupplierManagerDialog(self.store, self)
+        dlg.exec()
+        self._reload_current_supplier()
+
+    def show_about(self) -> None:
+        QMessageBox.about(
+            self,
+            "关于 投标文件生成助手",
+            "<h3>投标文件生成助手</h3>"
+            "<p>将政府采购招标文件 PDF 自动转换为结构规范、内容预填的投标文件 Word 初稿：</p>"
+            "<ul>"
+            "<li>招标文件 PDF 转 Word（乱码修复）</li>"
+            "<li>提取投标文件格式，重建 16 章骨架（自动编号、页眉页脚、目录域）</li>"
+            "<li>承诺函按通用规则填充采购人 / 代理机构 / 项目 / 编号 / 投标人</li>"
+            "<li>商务与技术表格按位置渲染，技术偏离表从招标文件模板提取</li>"
+            "<li>生成后清理文档机器码与用户信息</li>"
+            "</ul>"
+            "<p>科创研发室提供支持。</p>",
+        )
 
     # ------------------------------------------------------------------ #
     # 「生成」页
@@ -260,35 +470,53 @@ class MainWindow(QMainWindow):
         return page
 
     # ------------------------------------------------------------------ #
-    # 「设置」页（供应商配置）
+    # 「设置」页（当前供应商表单，自动保存到当前档案）
     # ------------------------------------------------------------------ #
     def _build_settings_tab(self) -> QWidget:
         page = QWidget()
         lay = QVBoxLayout(page)
 
-        sup_box = QGroupBox("供应商信息（未填写的字段在 Word 中以占位下划线显示）")
-        form = QFormLayout(sup_box)
+        top_row = QHBoxLayout()
+        self.supplier_label = QLabel()
+        manage_btn = QPushButton("管理供应商…")
+        manage_btn.clicked.connect(self.open_supplier_manager)
+        top_row.addWidget(self.supplier_label)
+        top_row.addStretch(1)
+        top_row.addWidget(manage_btn)
+        lay.addLayout(top_row)
+
+        self.sup_box = QGroupBox("供应商信息（未填写的字段在 Word 中以占位下划线显示；编辑即自动保存）")
+        form = QFormLayout(self.sup_box)
         self.fields: dict[str, QLineEdit] = {}
         for key, label in _SUPPLIER_FIELDS:
             edit = QLineEdit()
+            edit.textChanged.connect(self._save_current_supplier)
             self.fields[key] = edit
             form.addRow(label, edit)
         self.type_combo = QComboBox()
         self.type_combo.addItems(_COMPANY_TYPES)
+        self.type_combo.currentTextChanged.connect(self._save_current_supplier)
         form.addRow("供应商类型", self.type_combo)
-
-        btn_row = QHBoxLayout()
-        load_btn = QPushButton("从 supplier.yaml 加载…")
-        load_btn.clicked.connect(self.load_yaml)
-        save_btn = QPushButton("保存到 supplier.yaml…")
-        save_btn.clicked.connect(self.save_yaml)
-        btn_row.addWidget(load_btn)
-        btn_row.addWidget(save_btn)
-        btn_row.addStretch(1)
-        form.addRow(btn_row)
-        lay.addWidget(sup_box)
+        lay.addWidget(self.sup_box)
         lay.addStretch(1)
         return page
+
+    def _reload_current_supplier(self) -> None:
+        current = self.store.current()
+        data = self.store.load(current)
+        self.supplier_label.setText(f"当前供应商：<b>{current}</b>")
+        self._loading_supplier = True
+        for key, edit in self.fields.items():
+            edit.setText(str(data.get(key, "")))
+        self.type_combo.setCurrentText(data.get("company_type", "企业"))
+        self._loading_supplier = False
+
+    def _save_current_supplier(self) -> None:
+        if self._loading_supplier:
+            return
+        data = {k: e.text().strip() for k, e in self.fields.items()}
+        data["company_type"] = self.type_combo.currentText()
+        self.store.save(self.store.current(), {k: v for k, v in data.items() if v})
 
     # ------------------------------------------------------------------ #
     # 交互
@@ -303,33 +531,6 @@ class MainWindow(QMainWindow):
         if path:
             self.outdir_edit.setText(path)
 
-    def load_yaml(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "加载供应商配置", "examples", "YAML 文件 (*.yaml *.yml)")
-        if not path:
-            return
-        with open(path, encoding="utf-8") as handle:
-            data = yaml.safe_load(handle) or {}
-        for key, edit in self.fields.items():
-            value = data.get(key)
-            if value not in (None, ""):
-                edit.setText(str(value))
-        if data.get("company_type") in _COMPANY_TYPES:
-            self.type_combo.setCurrentText(data["company_type"])
-        self.log.append("已加载配置：" + path)
-
-    def save_yaml(self) -> None:
-        path, _ = QFileDialog.getSaveFileName(self, "保存供应商配置", "examples/supplier.yaml", "YAML 文件 (*.yaml)")
-        if not path:
-            return
-        with open(path, "w", encoding="utf-8") as handle:
-            yaml.safe_dump(self._supplier_dict(), handle, allow_unicode=True)
-        self.log.append("已保存配置：" + path)
-
-    def _supplier_dict(self) -> dict:
-        data = {k: e.text().strip() for k, e in self.fields.items()}
-        data["company_type"] = self.type_combo.currentText()
-        return {k: v for k, v in data.items() if v}
-
     def generate(self) -> None:
         pdf = self.pdf_edit.text().strip()
         outdir = self.outdir_edit.text().strip() or "out"
@@ -337,14 +538,15 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", "请先选择存在的招标文件 PDF。")
             return
         os.makedirs(outdir, exist_ok=True)
+        supplier_data = self.store.load(self.store.current())
         with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False, encoding="utf-8") as handle:
-            yaml.safe_dump(self._supplier_dict(), handle, allow_unicode=True)
+            yaml.safe_dump(supplier_data, handle, allow_unicode=True)
             supplier_path = handle.name
 
         self.gen_btn.setEnabled(False)
         self.progress.setValue(0)
         self.stage_label.setText("开始生成…")
-        self.log.append("开始生成…")
+        self.log.append(f"开始生成（供应商：{self.store.current()}）…")
 
         self._worker = Worker(pdf, outdir, supplier_path, self.tender_check.isChecked())
         self._worker.log.connect(self.log.append)
@@ -367,7 +569,7 @@ class MainWindow(QMainWindow):
     def on_done(self, ok: bool, message: str) -> None:
         self._timer.stop()
         if self._worker is not None:
-            self._worker.poll()  # 收尾：把剩余队列处理完
+            self._worker.poll()
         self.gen_btn.setEnabled(True)
         if ok:
             self.stage_label.setText("完成 ✓")
