@@ -40,4 +40,4 @@ class StyleSpec:
     footer_distance_cm: float = 1.75
 
     # Header / footer text
-    header_text: str = "投标文件"
+    header_text: str = ""

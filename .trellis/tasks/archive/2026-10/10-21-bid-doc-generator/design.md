@@ -156,7 +156,7 @@ def fix(text: str) -> str:
 - 二级标题可选 `（一）`（`numFmt="chineseCounting"` 加括号）或 `1.`。
 
 **页眉页脚**
-- 页眉：项目名称或"投标文件"，居中，宋体五号，带下边框线。
+- 页眉**默认为空**（`header_text=""`）；非空时居中文字、宋体五号、带下边框线。
 - 页脚：`第 X 页 共 Y 页`（`PAGE` / `NUMPAGES` 域），居中，宋体五号。
 - 封面独立分节、`different_first_page`，不显示页眉页脚与页码。
 

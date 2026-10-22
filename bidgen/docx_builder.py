@@ -275,20 +275,21 @@ def _set_header_footer(section, spec: StyleSpec) -> None:
     section.header.is_linked_to_previous = False
     section.footer.is_linked_to_previous = False
 
-    header = section.header.paragraphs[0]
-    header.text = ""
-    run = header.add_run(spec.header_text)
-    _style_run(run, spec, spec.body_font, spec.header_size)
-    header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ppr = header._p.get_or_add_pPr()
-    pbdr = OxmlElement("w:pBdr")
-    bottom = OxmlElement("w:bottom")
-    bottom.set(qn("w:val"), "single")
-    bottom.set(qn("w:sz"), "6")
-    bottom.set(qn("w:space"), "1")
-    bottom.set(qn("w:color"), "auto")
-    pbdr.append(bottom)
-    ppr.append(pbdr)
+    if spec.header_text:
+        header = section.header.paragraphs[0]
+        header.text = ""
+        run = header.add_run(spec.header_text)
+        _style_run(run, spec, spec.body_font, spec.header_size)
+        header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        ppr = header._p.get_or_add_pPr()
+        pbdr = OxmlElement("w:pBdr")
+        bottom = OxmlElement("w:bottom")
+        bottom.set(qn("w:val"), "single")
+        bottom.set(qn("w:sz"), "6")
+        bottom.set(qn("w:space"), "1")
+        bottom.set(qn("w:color"), "auto")
+        pbdr.append(bottom)
+        ppr.append(pbdr)
 
     footer = section.footer.paragraphs[0]
     footer.text = ""
