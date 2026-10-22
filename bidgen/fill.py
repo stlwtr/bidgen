@@ -131,6 +131,21 @@ def _ensure(values: Dict[str, str]) -> Dict[str, str]:
 # 日期规则（match-based，锚定行首以不误匹配“投标截止日期”）：
 # 已填日期 → 值+下划线；未填 → 把“____”替换为不间断空格+单下划线，保留 年/月/日 文字。
 _UNDERSCORE_RE = re.compile(r"_+")
+_UNDERSCORE_SEQ_RE = _UNDERSCORE_RE
+
+
+def underscore_to_ul(text: str) -> str:
+    """全文替换下划线字符序列 `_+` 为“等长不间断空格（U+00A0）+ 单下划线格式”。
+
+    每段连续 `_`（N 个）替换为 N 个不间断空格并用哨兵包裹，交由
+    `docx_builder._add_runs` 拆为带下划线（`run.font.underline`）的 run；
+    已是哨兵包裹的内容不受影响（哨兵内无 `_`）。
+    """
+    if not text:
+        return text
+    return _UNDERSCORE_SEQ_RE.sub(
+        lambda m: UL_START + ("\xa0" * len(m.group(0))) + UL_END, text
+    )
 _DATE_RE = re.compile(r"^日\s*期\s*[：:](.*)$")
 
 

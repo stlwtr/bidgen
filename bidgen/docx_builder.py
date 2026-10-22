@@ -52,7 +52,8 @@ class BidContext:
 
 
 def _txt(text: str) -> str:
-    return punctuation.normalize(text) if text else text
+    # 全文先把 `_+` 替换为“等长不间断空格 + 单下划线”，再做标点规范化。
+    return punctuation.normalize(fill.underscore_to_ul(text)) if text else text
 
 
 # --------------------------------------------------------------------------- #
