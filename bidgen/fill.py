@@ -34,6 +34,11 @@ def _ul(value: str) -> str:
     return f"{UL_START}{value}{UL_END}"
 
 
+def _ph_ul(value: str) -> str:
+    """占位符用“不间断空格 + 单下划线格式”；真实值保持普通文本（不加下划线）。"""
+    return _ul(value) if value == PLACEHOLDER else value
+
+
 def _pick(value: Optional[str]) -> str:
     return value if value not in (None, "") else PLACEHOLDER
 
@@ -62,7 +67,7 @@ _RULES: List[Tuple[re.Pattern, Callable[[Dict[str, str]], str]]] = [
     # 采购人、采购代理机构名称：____
     (
         re.compile(r"^采购人[、,]?采购代理机构名称\s*[：:].*$"),
-        lambda v: f"采购人、采购代理机构名称：{v['purchaser']}、{v['agency']}",
+        lambda v: f"采购人、采购代理机构名称：{_ph_ul(v['purchaser'])}、{_ph_ul(v['agency'])}",
     ),
     # （项目编号：____）  (value underlined)
     (
@@ -92,17 +97,17 @@ _RULES: List[Tuple[re.Pattern, Callable[[Dict[str, str]], str]]] = [
     # 详细地址：____  邮政编码：____  (tab-separated so it survives punctuation)
     (
         re.compile(r"详细地址\s*[：:]\s*_*\s*邮政编码\s*[：:]\s*_*"),
-        lambda v: f"详细地址:{v['address']}\t邮政编码:{v['postal_code']}",
+        lambda v: f"详细地址:{_ph_ul(v['address'])}\t邮政编码:{_ph_ul(v['postal_code'])}",
     ),
     # 电话：____  电子函件：____
     (
         re.compile(r"电\s*话\s*[：:]\s*_*\s*电子\s*函件\s*[：:]\s*_*"),
-        lambda v: f"电话:{v['phone']}\t电子函件:{v['email']}",
+        lambda v: f"电话:{_ph_ul(v['phone'])}\t电子函件:{_ph_ul(v['email'])}",
     ),
     # 投标人开户银行：____  账号/行号：____
     (
         re.compile(r"投标人开户银行\s*[：:]\s*_*\s*账号\s*[/／]\s*行号\s*[：:]\s*_*"),
-        lambda v: f"投标人开户银行:{v['bank_name']}\t账号/行号:{v['bank_account']}",
+        lambda v: f"投标人开户银行:{_ph_ul(v['bank_name'])}\t账号/行号:{_ph_ul(v['bank_account'])}",
     ),
     # 投标人名称（加盖公章）：____
     (

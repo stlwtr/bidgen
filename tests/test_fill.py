@@ -114,3 +114,19 @@ def test_date_placeholder_is_nbsp_plus_underline():
     assert fill.fill_line("日期：年月日", V) == "日期:" + nbsp
     # “日期：”（无占位）不匹配日期规则，保留原文
     assert fill.fill_line("日期：", V) == "日期："
+
+
+def test_ph_ul_placeholder_is_nbsp_underline():
+    # 占位符（V 不含 address/phone/bank）→ 不间断空格 + 单下划线；真实值 → 普通文本
+    nbsp = "\xa0" * 6
+    assert fill.fill_line("详细地址:__________ 邮政编码:__________", V) == (
+        "详细地址:" + nbsp + "\t邮政编码:" + nbsp
+    )
+    assert fill.fill_line("电话:__________电子函件:__________", V) == (
+        "电话:" + nbsp + "\t电子函件:" + nbsp
+    )
+    # 值有内容 → 普通文本（无下划线哨兵残留）
+    values = {**V, "address": "示例市示例路 100 号"}
+    out = fill.fill_line("详细地址:__________ 邮政编码:__________", values)
+    assert out == "详细地址:示例市示例路 100 号\t邮政编码:" + nbsp
+    assert fill.UL_START not in out and fill.UL_END not in out
