@@ -21,7 +21,7 @@ SUPPLIER_FIELDS = [
     ("bank_account", "账号 / 行号"),
     ("authorized_representative", "委托代理人姓名"),
     ("authorized_representative_id", "委托代理人身份证号"),
-    ("date", "日期（如 2026年08月25日，留空以占位显示）"),
+    ("date", "日期"),
 ]
 
 COMPANY_TYPES = ["企业", "事业单位", "社会团体", "非企业专业服务机构", "个体工商户", "自然人"]

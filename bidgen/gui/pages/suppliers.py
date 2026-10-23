@@ -2,13 +2,27 @@
 
 from __future__ import annotations
 
+import re
+
+from PySide6.QtCore import QDate
 from PySide6.QtWidgets import (
-    QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QInputDialog, QLineEdit,
-    QListWidget, QListWidgetItem, QMessageBox, QPushButton, QVBoxLayout, QWidget,
+    QComboBox, QDateEdit, QFormLayout, QGroupBox, QHBoxLayout, QInputDialog,
+    QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton,
+    QVBoxLayout, QWidget,
 )
 
 from ..store import SupplierStore
 from ..widgets import COMPANY_TYPES, SUPPLIER_FIELDS
+
+_DATE_PLACEHOLDER = QDate(1900, 1, 1)  # 表示"留空（以占位显示）"的最小日期
+
+
+def _parse_cn_date(text: str) -> QDate | None:
+    """解析 '2026年8月25日' / '2026年08月25日' 为 QDate；失败返回 None。"""
+    m = re.match(r"^\s*(\d{4})年(\d{1,2})月(\d{1,2})日\s*$", text or "")
+    if m:
+        return QDate(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    return None
 
 
 class SuppliersPage(QWidget):
@@ -37,10 +51,19 @@ class SuppliersPage(QWidget):
         # 右：表单（选中即编辑、自动保存）
         right_box = QGroupBox("供应商信息（编辑即自动保存）")
         form = QFormLayout(right_box)
-        self.fields: dict[str, QLineEdit] = {}
+        self.fields: dict[str, QLineEdit | QDateEdit] = {}
         for key, label in SUPPLIER_FIELDS:
-            edit = QLineEdit()
-            edit.textChanged.connect(self._save_current)
+            if key == "date":
+                edit = QDateEdit()
+                edit.setDisplayFormat("yyyy年MM月dd日")
+                edit.setCalendarPopup(True)
+                edit.setMinimumDate(_DATE_PLACEHOLDER)
+                edit.setSpecialValueText("留空（以占位显示）")
+                edit.setDate(_DATE_PLACEHOLDER)
+                edit.dateChanged.connect(self._save_current)
+            else:
+                edit = QLineEdit()
+                edit.textChanged.connect(self._save_current)
             self.fields[key] = edit
             form.addRow(label, edit)
         self.type_combo = QComboBox()
@@ -75,7 +98,11 @@ class SuppliersPage(QWidget):
         data = self.store.load(name)
         self._loading = True
         for key, edit in self.fields.items():
-            edit.setText(str(data.get(key, "")))
+            if key == "date":
+                parsed = _parse_cn_date(str(data.get(key, "")))
+                edit.setDate(parsed if parsed is not None else _DATE_PLACEHOLDER)
+            else:
+                edit.setText(str(data.get(key, "")))
         self.type_combo.setCurrentText(data.get("company_type", "企业"))
         self._loading = False
 
@@ -90,7 +117,13 @@ class SuppliersPage(QWidget):
         if item is None:
             return
         name = item.data(1)
-        data = {k: e.text().strip() for k, e in self.fields.items()}
+        data: dict[str, str] = {}
+        for key, edit in self.fields.items():
+            if key == "date":
+                d = edit.date()
+                data[key] = "" if d == edit.minimumDate() else d.toString("yyyy年MM月dd日")
+            else:
+                data[key] = edit.text().strip()
         data["company_type"] = self.type_combo.currentText()
         self.store.save(name, {k: v for k, v in data.items() if v})
 
