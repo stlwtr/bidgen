@@ -28,5 +28,8 @@ dist/
 # 真实供应商配置（含隐私信息，勿提交；用 examples/supplier.example.yaml 作为模板复制）
 /examples/supplier.yaml
 
+# 招标文件 PDF（可能含敏感/非公开信息或受版权限制，勿提交；放到 docs/ 即可，已被忽略）
+docs/*.pdf
+
 # 编辑器 / 系统
 .DS_Store
