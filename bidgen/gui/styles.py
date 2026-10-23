@@ -53,6 +53,16 @@ QLineEdit, QComboBox {{
     selection-background-color: {PRIMARY};
 }}
 QLineEdit:focus, QComboBox:focus {{ border: 1px solid {PRIMARY}; background: #ffffff; }}
+QDateEdit {{ background: transparent; border: 1px solid #d7dee9; border-radius: 6px; padding: 7px 9px; }}
+QDateEdit QLineEdit {{ background: transparent; border: none; }}
+QDateEdit::drop-down {{
+    subcontrol-origin: padding; subcontrol-position: top right;
+    width: 28px; background: transparent; border: none;
+    border-left: 1px solid #d7dee9;
+    border-top-right-radius: 6px; border-bottom-right-radius: 6px;
+    image: url(assets/arrow-down.png);
+}}
+QDateEdit::drop-down:hover {{ background: #eef1f7; }}
 QPushButton {{
     background: #eef1f7; border: 1px solid #d7dee9; border-radius: 6px;
     padding: 7px 14px; color: #2d3748;
