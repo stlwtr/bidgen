@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import (
     QComboBox, QDateEdit, QFormLayout, QGroupBox, QHBoxLayout, QInputDialog,
     QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton,
@@ -49,6 +49,9 @@ class SuppliersPage(QWidget):
         # 右：表单（选中即编辑、自动保存）
         right_box = QGroupBox("供应商信息（编辑即自动保存）")
         form = QFormLayout(right_box)
+        # 覆盖 macOS Aqua 默认（标签右对齐 + 字段不拉伸），统一为左对齐 + 可伸缩
+        form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.fields: dict[str, QLineEdit | QDateEdit] = {}
         for key, label in SUPPLIER_FIELDS:
             if key == "date":

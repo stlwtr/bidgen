@@ -21,6 +21,7 @@
 - **R8 技术实现**：`gui/` 包拆分（pages / widgets / store / workers / styles）；保留 fd 进度捕获与 SupplierStore 多档案；语义化版本 1.0.0 起 + 构建日期写入关于页。
 - **R9 测试与分发**：offscreen 冒烟 + pytest-qt 关键交互测试（选文件 / 生成流程 mock / 供应商 CRUD）；保留三平台打包脚本 + 新增 GitHub Actions 自动三平台打包（push 上传 artifact / release）。
 - **R10 版本更新检查（COS 迁移）**：关于页「检查更新」从远程 version.json 拉取最新版本号并语义化对比；version.json 托管于腾讯云 COS 公开读对象，应用匿名拉取（不携带任何密钥）。
+- **R11 表单布局统一（标题左对齐 + 字段可伸缩）**：三处 QFormLayout（suppliers.py:51 供应商页表单、generate.py:47 文件选择行、generate.py:62 高级选项）显式设置 `setLabelAlignment(AlignLeft|AlignVCenter)` 与 `setFieldGrowthPolicy(AllNonFixedFieldsGrow)`，覆盖 macOS Aqua 默认（标签右对齐 + FieldsStayAtSizeHint 不拉伸），使标签左对齐、字段填充可用宽度并随窗口伸缩。
 
 ## Acceptance Criteria
 
@@ -37,6 +38,7 @@
 - [ ] AC11 offscreen 冒烟通过；pytest-qt 关键交互测试通过（选文件 / 生成流程 mock / 供应商 CRUD）。
 - [ ] AC12 GitHub Actions 工作流存在：push 自动在 Win / Linux / macOS 打包并上传 artifact。
 - [ ] AC13 更新检查改为从 COS 公开 URL `https://bidgen-1251440031.cos.ap-guangzhou.myqcloud.com/version.json` 匿名拉取；应用内不含任何 COS 密钥；网络 / 解析失败仍按「无更新 / 检查失败」处理，不崩溃。
+- [ ] AC14 三处表单（suppliers.py:51 / generate.py:47 / generate.py:62）标签文字左对齐（不再右对齐贴近字段）；字段（含日期选择器、供应商类型下拉、文件路径、输出目录等）水平填充表单可用宽度，窗口拉宽时字段同步变长；pytest tests/gui 通过且 ruff 无错。
 
 ## Out of Scope
 
@@ -62,6 +64,8 @@
 - D11 分发：保留三平台打包脚本 + GitHub Actions 自动三平台打包。
 - D12 代码：`gui/` 包拆分（pages / widgets / store / workers / styles）。
 - D13 更新检查源：version.json 托管于腾讯云 COS 公开读对象（`bidgen-1251440031` / `ap-guangzhou` / `version.json`），应用匿名拉取，不引入 qcloud_cos SDK、不携带密钥（方案 A，用户已确认）。
+- D14 表单布局：显式设置 label 左对齐 + 字段拉伸（不依赖平台 style hint），同时统一三平台表现；实现仅需每处两行 setter，风险极低。
+- D15 R11 范围：三处 QFormLayout 统一修改（供应商页 + 生成页两处），用户已确认（避免跨页面表单行为不一致与后续返工）。
 
 ## Technical Notes
 
@@ -69,3 +73,5 @@
 - 迁移自 Gitee raw URL（`raw.giteeusercontent.com/yanglishuan/bidgen/raw/dev/version.json`）；COS 公开读即普通 HTTPS GET，`urllib.request` 逻辑原样复用，无需新增依赖。
 - version.json 不参与 PyInstaller 打包（仅 logo.png 被 `--add-data`），运行时远程拉取，迁移不影响打包脚本。
 - COS URL 已实测可达（HTTP 200，内容与仓库 version.json 一致）。
+
+- R11 根因：macOS（cocoa/QMacStyle）下 QFormLayout 默认为标签右对齐（SH_FormLayoutLabelAlignment=AlignRight）且 FieldsStayAtSizeHint（字段不拉伸、form 水平居中），即用户所见「标题右对齐、内容短、不可伸缩」；显式 setter 后跨平台一致。offscreen 平台默认不同（AlignLeft + AllNonFixedFieldsGrow），故截图验证需在 cocoa 下或信显式设置。

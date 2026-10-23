@@ -6,7 +6,7 @@ import os
 import tempfile
 
 import yaml
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QCheckBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QLabel,
     QLineEdit, QMessageBox, QProgressBar, QPushButton, QTextEdit,
@@ -45,6 +45,9 @@ class GeneratePage(QWidget):
         # 招标 PDF（最少字段）
         file_box = QGroupBox("招标文件")
         fl = QFormLayout(file_box)
+        # 覆盖 macOS Aqua 默认（标签右对齐 + 字段不拉伸），统一为左对齐 + 可伸缩
+        fl.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.pdf_edit = QLineEdit()
         self.pdf_edit.setReadOnly(True)
         self.pdf_edit.setPlaceholderText("选择招标文件 PDF…")
@@ -60,6 +63,8 @@ class GeneratePage(QWidget):
         # 高级选项（折叠）
         self.advanced = CollapsibleSection("高级选项")
         adv_form = QFormLayout(self.advanced.content)
+        adv_form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        adv_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.outdir_edit = QLineEdit(default_downloads_dir())
         out_btn = QPushButton("浏览…")
         out_btn.clicked.connect(self.browse_outdir)
