@@ -8,8 +8,8 @@ from dataclasses import dataclass
 
 from .version import VERSION
 
-# version.json 提交到 dev 分支后，可通过该 Gitee raw URL 访问
-UPDATE_URL = "https://raw.giteeusercontent.com/yanglishuan/bidgen/raw/dev/version.json"
+# version.json 托管于腾讯云 COS 公开读对象，应用匿名拉取（不携带密钥）
+UPDATE_URL = "https://bidgen-1251440031.cos.ap-guangzhou.myqcloud.com/version.json"
 _TIMEOUT = 8
 
 

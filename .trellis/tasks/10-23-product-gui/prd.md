@@ -20,6 +20,7 @@
 - **R7 交互流程**：首次引导页（三步图文 + 界面示意 + 「不再显示」存配置）→ 主界面空状态引导（未选 PDF 时引导文案）；生成 → 顶部进度条 → 成功条或失败条；出错 → 内联错误条（标题 + 展开详情）+ 一键重试 + 一键导出日志（版本号 / OS / 输入文件 / 供应商名 / 当前阶段 / 堆栈，路径脱敏）。
 - **R8 技术实现**：`gui/` 包拆分（pages / widgets / store / workers / styles）；保留 fd 进度捕获与 SupplierStore 多档案；语义化版本 1.0.0 起 + 构建日期写入关于页。
 - **R9 测试与分发**：offscreen 冒烟 + pytest-qt 关键交互测试（选文件 / 生成流程 mock / 供应商 CRUD）；保留三平台打包脚本 + 新增 GitHub Actions 自动三平台打包（push 上传 artifact / release）。
+- **R10 版本更新检查（COS 迁移）**：关于页「检查更新」从远程 version.json 拉取最新版本号并语义化对比；version.json 托管于腾讯云 COS 公开读对象，应用匿名拉取（不携带任何密钥）。
 
 ## Acceptance Criteria
 
@@ -35,6 +36,7 @@
 - [ ] AC10 `gui/` 拆分为包（pages / widgets / store / workers / styles），原有功能（生成、进度、多供应商、打包脚本）不回归。
 - [ ] AC11 offscreen 冒烟通过；pytest-qt 关键交互测试通过（选文件 / 生成流程 mock / 供应商 CRUD）。
 - [ ] AC12 GitHub Actions 工作流存在：push 自动在 Win / Linux / macOS 打包并上传 artifact。
+- [ ] AC13 更新检查改为从 COS 公开 URL `https://bidgen-1251440031.cos.ap-guangzhou.myqcloud.com/version.json` 匿名拉取；应用内不含任何 COS 密钥；网络 / 解析失败仍按「无更新 / 检查失败」处理，不崩溃。
 
 ## Out of Scope
 
@@ -43,6 +45,7 @@
 - 深色模式 / 主题切换。
 - 国际化（i18n）/ 英文界面。
 - Web 界面 / Electron / Tauri。
+- COS 私有读 / 签名请求 / STS 临时密钥（version.json 公开读，应用匿名访问）。
 
 ## Decisions
 
@@ -58,3 +61,11 @@
 - D10 测试：offscreen 冒烟 + pytest-qt 关键交互测试。
 - D11 分发：保留三平台打包脚本 + GitHub Actions 自动三平台打包。
 - D12 代码：`gui/` 包拆分（pages / widgets / store / workers / styles）。
+- D13 更新检查源：version.json 托管于腾讯云 COS 公开读对象（`bidgen-1251440031` / `ap-guangzhou` / `version.json`），应用匿名拉取，不引入 qcloud_cos SDK、不携带密钥（方案 A，用户已确认）。
+
+## Technical Notes
+
+- 现状 `bidgen/gui/updater.py`：`UPDATE_URL = "https://bidgen-1251440031.cos.ap-guangzhou.myqcloud.com/version.json"`（腾讯云 COS 公开读对象），`urllib.request` 匿名拉取 + `_version_tuple` 语义化对比；`about.py` 后台线程调用。
+- 迁移自 Gitee raw URL（`raw.giteeusercontent.com/yanglishuan/bidgen/raw/dev/version.json`）；COS 公开读即普通 HTTPS GET，`urllib.request` 逻辑原样复用，无需新增依赖。
+- version.json 不参与 PyInstaller 打包（仅 logo.png 被 `--add-data`），运行时远程拉取，迁移不影响打包脚本。
+- COS URL 已实测可达（HTTP 200，内容与仓库 version.json 一致）。
