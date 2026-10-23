@@ -1,0 +1,41 @@
+# 供应商（投标人）信息配置【示例模板】
+# 用法：复制本文件为 examples/supplier.yaml 并填写真实信息。
+# 注意：examples/supplier.yaml 已被 .gitignore，填写的真实信息不会被提交到代码库。
+# 生成投标文件时自动填入各承诺函；未提供的字段在 Word 中以 ______ 占位。
+# 命令：bidgen generate <招标文件.pdf> --supplier examples/supplier.yaml
+
+# 投标人名称（公司全称）
+company_name: ""
+
+# 供应商类型：企业 / 事业单位 / 社会团体 / 非企业专业服务机构 / 个体工商户 / 自然人
+company_type: "企业"
+
+# 法定代表人（单位负责人）
+legal_representative: ""
+
+# 详细地址
+address: ""
+
+# 邮政编码
+postal_code: ""
+
+# 电话
+phone: ""
+
+# 电子函件（邮箱）
+email: ""
+
+# 投标人开户银行
+bank_name: ""
+
+# 账号 / 行号
+bank_account: ""
+
+# 委托代理人姓名（授权代表参加投标时填写）
+authorized_representative: ""
+
+# 委托代理人身份证号
+authorized_representative_id: ""
+
+# 日期（如 2026年07月01日）；留空以 ______ 占位
+date: ""

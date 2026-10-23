@@ -25,5 +25,8 @@ dist/
 # GUI 运行时供应商档案数据
 /suppliers/
 
+# 真实供应商配置（含隐私信息，勿提交；用 examples/supplier.example.yaml 作为模板复制）
+/examples/supplier.yaml
+
 # 编辑器 / 系统
 .DS_Store

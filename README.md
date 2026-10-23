@@ -58,7 +58,7 @@ python3 -m venv .venv
 
 ## 供应商配置
 
-复制 `examples/supplier.yaml` 并按实际填写。未填写的字段在 Word 中以 `______` 占位，不会报错。
+复制 `examples/supplier.example.yaml` 为 `examples/supplier.yaml` 并按实际填写。**`examples/supplier.yaml` 已被 `.gitignore` 忽略，填写的真实供应商信息（公司名、地址、电话、银行账号等）不会被提交到代码库**；请勿把含隐私信息的配置文件提交入库。未填写的字段在 Word 中以 `______` 占位，不会报错。
 
 | 字段 | 说明 |
 |------|------|
