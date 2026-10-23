@@ -1,0 +1,70 @@
+name: build-gui
+
+on:
+  push:
+    branches: [dev, main, master]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build executable (Windows / Linux, onefile)
+        if: runner.os != 'macOS'
+        shell: bash
+        run: |
+          python -m PyInstaller --onefile --windowed --name BidgenGUI \
+            --collect-all fitz --collect-all pdf2docx --collect-all cv2 \
+            --collect-all docx --collect-all yaml --collect-all bidgen \
+            --hidden-import PySide6 app_gui.py
+
+      - name: Build executable (macOS, onedir .app)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          python -m PyInstaller --onedir --windowed --name BidgenGUI \
+            --collect-all fitz --collect-all pdf2docx --collect-all cv2 \
+            --collect-all docx --collect-all yaml --collect-all bidgen \
+            --hidden-import PySide6 app_gui.py
+
+      - name: Prepare artifact name
+        shell: bash
+        run: |
+          set -e
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp dist/BidgenGUI.exe dist/BidgenGUI-windows-x64.exe
+          elif [ "${{ runner.os }}" = "Linux" ]; then
+            cp dist/BidgenGUI dist/BidgenGUI-linux-x64
+          else
+            if [ -d dist/BidgenGUI.app ]; then
+              ditto -c -k --sequesterRsrc --keepParent dist/BidgenGUI.app dist/BidgenGUI-macos.zip
+            else
+              cp dist/BidgenGUI dist/BidgenGUI-macos
+            fi
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BidgenGUI-${{ runner.os }}
+          path: dist/
+          if-no-files-found: warn
+
+      - name: Release (on version tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/
