@@ -37,6 +37,7 @@ QMainWindow, QWidget {{
     font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     font-size: {px}px; color: {TEXT};
 }}
+QLabel {{ background: transparent; }}
 QLabel#title {{ font-size: {title_px}px; font-weight: 800; color: #17202b; }}
 QLabel#subtitle {{ color: {TEXT_MUTED}; margin-bottom: 4px; }}
 QGroupBox {{
@@ -44,7 +45,7 @@ QGroupBox {{
     margin-top: 24px; padding: 12px 12px 10px; font-weight: 600;
 }}
 QGroupBox::title {{
-    subcontrol-origin: margin; left: 12px; top: 0px;
+    subcontrol-origin: margin; left: 0px; top: 0px;
     padding: 0 0px; color: #4a5568;
 }}
 QLineEdit, QComboBox {{
