@@ -6,6 +6,8 @@ import json
 import os
 import sys
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
     QMainWindow, QMessageBox, QStackedWidget, QStyle, QVBoxLayout, QWidget,
@@ -43,12 +45,28 @@ class MainWindow(QMainWindow):
         lay.setContentsMargins(18, 14, 18, 14)
         lay.setSpacing(10)
 
+        self.setWindowIcon(QIcon("assets/logo.png"))
+
+        title_row = QHBoxLayout()
+        title_row.setSpacing(12)
+        logo_label = QLabel()
+        logo_label.setPixmap(
+            QPixmap("assets/logo.png").scaled(
+                44, 44, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+        )
+        logo_label.setFixedSize(48, 48)
+        title_row.addWidget(logo_label)
+        title_col = QVBoxLayout()
+        title_col.setSpacing(2)
         title = QLabel("投标文件生成助手")
         title.setObjectName("title")
         subtitle = QLabel(f"招标文件 PDF → 投标文件 Word　|　版本 {VERSION}（{BUILD_DATE}）")
         subtitle.setObjectName("subtitle")
-        lay.addWidget(title)
-        lay.addWidget(subtitle)
+        title_col.addWidget(title)
+        title_col.addWidget(subtitle)
+        title_row.addLayout(title_col, 1)
+        lay.addLayout(title_row)
 
         body = QHBoxLayout()
         body.setSpacing(12)

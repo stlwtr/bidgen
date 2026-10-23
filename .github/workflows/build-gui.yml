@@ -28,6 +28,8 @@ jobs:
         shell: bash
         run: |
           python -m PyInstaller --onefile --windowed --name BidgenGUI \
+            --icon assets/logo.ico \
+            --add-data "assets/logo.png:assets" \
             --collect-all fitz --collect-all pdf2docx --collect-all cv2 \
             --collect-all docx --collect-all yaml --collect-all bidgen \
             --hidden-import PySide6 app_gui.py
@@ -37,6 +39,8 @@ jobs:
         shell: bash
         run: |
           python -m PyInstaller --onedir --windowed --name BidgenGUI \
+            --icon assets/logo.icns \
+            --add-data "assets/logo.png:assets" \
             --collect-all fitz --collect-all pdf2docx --collect-all cv2 \
             --collect-all docx --collect-all yaml --collect-all bidgen \
             --hidden-import PySide6 app_gui.py

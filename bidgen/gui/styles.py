@@ -41,7 +41,7 @@ QLabel#title {{ font-size: {title_px}px; font-weight: 800; color: #17202b; }}
 QLabel#subtitle {{ color: {TEXT_MUTED}; margin-bottom: 4px; }}
 QGroupBox {{
     background: {CARD_BG}; border: 1px solid {BORDER}; border-radius: 10px;
-    margin-top: 16px; padding: 18px 12px 10px; font-weight: 600;
+    margin-top: 24px; padding: 18px 12px 10px; font-weight: 600;
 }}
 QGroupBox::title {{
     subcontrol-origin: margin; left: 12px; top: 0px;

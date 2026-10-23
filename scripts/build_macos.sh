@@ -16,6 +16,8 @@ pip install -r requirements.txt pyinstaller
 
 echo "开始打包..."
 pyinstaller --onedir --windowed --name BidgenGUI \
+  --icon assets/logo.icns \
+  --add-data "assets/logo.png:assets" \
   --collect-all fitz --collect-all pdf2docx --collect-all cv2 \
   --collect-all docx --collect-all yaml --collect-all bidgen \
   --hidden-import PySide6 app_gui.py
