@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
-    QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QInputDialog, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton,
-    QVBoxLayout, QWidget,
+    QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QInputDialog, QLineEdit,
+    QListWidget, QListWidgetItem, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
 from ..store import SupplierStore
@@ -21,19 +20,19 @@ class SuppliersPage(QWidget):
         lay = QHBoxLayout(self)
         lay.setSpacing(12)
 
-        # 左：档案列表 + 操作
-        left = QVBoxLayout()
-        left.addWidget(QLabel("供应商档案（✓ = 当前用于生成）"))
+        # 左：档案列表 + 操作（QGroupBox，与右侧"供应商信息"上边缘对齐）
+        left_box = QGroupBox("供应商档案（✓ = 当前用于生成）")
+        left_lay = QVBoxLayout(left_box)
         self.listw = QListWidget()
         self.listw.currentItemChanged.connect(self._on_select)
-        left.addWidget(self.listw, 1)
+        left_lay.addWidget(self.listw, 1)
         btns = QHBoxLayout()
         for text, fn in [("新建", self.add), ("删除", self.delete_selected), ("设为当前", self.set_current)]:
             btn = QPushButton(text)
             btn.clicked.connect(fn)
             btns.addWidget(btn)
-        left.addLayout(btns)
-        lay.addLayout(left, 2)
+        left_lay.addLayout(btns)
+        lay.addWidget(left_box, 2)
 
         # 右：表单（选中即编辑、自动保存）
         right_box = QGroupBox("供应商信息（编辑即自动保存）")
