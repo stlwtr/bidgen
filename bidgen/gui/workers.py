@@ -12,6 +12,11 @@ from PySide6.QtCore import QThread, Signal
 from .. import cli
 
 
+def _sanitize_filename(name: str, max_len: int = 60) -> str:
+    """把项目名称清理为合法文件名片段（去非法字符与空白，限长）。"""
+    return re.sub(r'[\\/:*?"<>|\s]+', "", name.strip())[:max_len]
+
+
 class _QueueWriter:
     def __init__(self, q: "queue.Queue[str]") -> None:
         self.q = q
@@ -41,6 +46,7 @@ class Worker(QThread):
         self.supplier_path = supplier_path
         self.with_tender = with_tender
         self.q: "queue.Queue[str]" = queue.Queue()
+        self.bid_path: str | None = None
 
     def run(self) -> None:
         read_fd, write_fd = os.pipe()
@@ -56,10 +62,20 @@ class Worker(QThread):
                 cli._convert(self.pdf, tender, True)
                 self.log.emit("已生成：" + tender)
             self.log.emit("【2/2】生成投标文件…")
-            bid = os.path.join(self.outdir, "投标文件.docx")
-            cli._generate(self.pdf, bid, self.supplier_path, True)
-            self.log.emit("已生成：" + bid)
-            self.done.emit(True, self.outdir)
+            # 提取项目名称以关联输出文件名（投标文件-{项目名称}.docx）
+            bid_name = "投标文件.docx"
+            try:
+                lines = cli.pdf_reader.read_lines(self.pdf)
+                fields = cli.extract.extract_fields(lines)
+                safe = _sanitize_filename(fields.get("project_name") or "")
+                if safe:
+                    bid_name = f"投标文件-{safe}.docx"
+            except Exception:  # noqa: BLE001 - 提取失败则用默认名
+                pass
+            self.bid_path = os.path.join(self.outdir, bid_name)
+            cli._generate(self.pdf, self.bid_path, self.supplier_path, True)
+            self.log.emit("已生成：" + self.bid_path)
+            self.done.emit(True, self.bid_path)
         except Exception as exc:  # noqa: BLE001 - surface a readable message in the GUI
             self.q.put("错误：" + str(exc))
             self.done.emit(False, str(exc))

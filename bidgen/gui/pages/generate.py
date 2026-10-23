@@ -162,7 +162,7 @@ class GeneratePage(QWidget):
             self.stage_label.setText("完成 ✓")
             self.progress.setValue(self.progress.maximum())
             self._emit_log("全部完成 ✓")
-            bid = os.path.join(outdir, "投标文件.docx")
+            bid = message  # worker.emit 的是投标文件完整路径（含项目名）
             self.success_banner.show_success(
                 "生成完成 ✓",
                 [
