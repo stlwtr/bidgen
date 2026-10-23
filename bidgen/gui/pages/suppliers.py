@@ -14,8 +14,6 @@ from PySide6.QtWidgets import (
 from ..store import SupplierStore
 from ..widgets import COMPANY_TYPES, SUPPLIER_FIELDS
 
-_DATE_PLACEHOLDER = QDate(1900, 1, 1)  # 表示"留空（以占位显示）"的最小日期
-
 
 def _parse_cn_date(text: str) -> QDate | None:
     """解析 '2026年8月25日' / '2026年08月25日' 为 QDate；失败返回 None。"""
@@ -57,9 +55,7 @@ class SuppliersPage(QWidget):
                 edit = QDateEdit()
                 edit.setDisplayFormat("yyyy年MM月dd日")
                 edit.setCalendarPopup(True)
-                edit.setMinimumDate(_DATE_PLACEHOLDER)
-                edit.setSpecialValueText("留空（以占位显示）")
-                edit.setDate(_DATE_PLACEHOLDER)
+                edit.setDate(QDate.currentDate())
                 edit.dateChanged.connect(self._save_current)
             else:
                 edit = QLineEdit()
@@ -100,7 +96,7 @@ class SuppliersPage(QWidget):
         for key, edit in self.fields.items():
             if key == "date":
                 parsed = _parse_cn_date(str(data.get(key, "")))
-                edit.setDate(parsed if parsed is not None else _DATE_PLACEHOLDER)
+                edit.setDate(parsed if parsed is not None else QDate.currentDate())
             else:
                 edit.setText(str(data.get(key, "")))
         self.type_combo.setCurrentText(data.get("company_type", "企业"))
@@ -120,8 +116,7 @@ class SuppliersPage(QWidget):
         data: dict[str, str] = {}
         for key, edit in self.fields.items():
             if key == "date":
-                d = edit.date()
-                data[key] = "" if d == edit.minimumDate() else d.toString("yyyy年MM月dd日")
+                data[key] = edit.date().toString("yyyy年MM月dd日")
             else:
                 data[key] = edit.text().strip()
         data["company_type"] = self.type_combo.currentText()
