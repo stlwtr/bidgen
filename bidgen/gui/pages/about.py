@@ -30,3 +30,9 @@ class AboutPage(QWidget):
         support = QLabel("科创研发室提供支持。")
         support.setStyleSheet("color:#4a5568; font-weight:600;")
         lay.addWidget(support)
+        feedback = QLabel(
+            '<a href="https://www.kdocs.cn/l/cj7LOlXOtrRH">问题反馈【金山文档 | WPS云文档】</a>'
+        )
+        feedback.setOpenExternalLinks(True)
+        feedback.setStyleSheet("color:#4a7dff;")
+        lay.addWidget(feedback)
