@@ -39,6 +39,11 @@ def open_path(path: str) -> None:
         os.system(f'xdg-open "{path}"')
 
 
+def default_downloads_dir() -> str:
+    """系统下载目录（Win/Linux/macOS 通用默认：~/Downloads）。"""
+    return os.path.join(os.path.expanduser("~"), "Downloads")
+
+
 class CollapsibleSection(QWidget):
     """「高级选项 ▸」可折叠区。"""
 

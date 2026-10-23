@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..store import SupplierStore
-from ..widgets import Banner, CollapsibleSection, open_path
+from ..widgets import Banner, CollapsibleSection, default_downloads_dir, open_path
 from ..workers import Worker
 
 
@@ -60,7 +60,7 @@ class GeneratePage(QWidget):
         # 高级选项（折叠）
         self.advanced = CollapsibleSection("高级选项")
         adv_form = QFormLayout(self.advanced.content)
-        self.outdir_edit = QLineEdit(os.path.abspath("out"))
+        self.outdir_edit = QLineEdit(default_downloads_dir())
         out_btn = QPushButton("浏览…")
         out_btn.clicked.connect(self.browse_outdir)
         row2 = QHBoxLayout()
@@ -114,7 +114,7 @@ class GeneratePage(QWidget):
 
     def generate(self) -> None:
         pdf = self.pdf_edit.text().strip()
-        outdir = self.outdir_edit.text().strip() or "out"
+        outdir = self.outdir_edit.text().strip() or default_downloads_dir()
         if not pdf or not os.path.exists(pdf):
             QMessageBox.warning(self, "提示", "请先选择存在的招标文件 PDF。")
             return
