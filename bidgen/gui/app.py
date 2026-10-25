@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("投标文件生成助手")
-        self.resize(860, 760)
+        self.resize(960, 760)
         self.store = SupplierStore()
 
         root = QWidget()
