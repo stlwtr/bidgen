@@ -1,5 +1,5 @@
 @echo off
-REM 投标文件生成助手 - Windows 一键打包脚本（生成 dist\BidgenGUI.exe）
+REM 投标助手 - Windows 一键打包脚本（生成 dist\BidgenGUI.exe）
 cd /d "%~dp0\.."
 
 if not exist .venv (

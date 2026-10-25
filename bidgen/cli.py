@@ -60,7 +60,7 @@ def _generate(pdf: str, out: str, supplier: Optional[str], do_sanitize: bool) ->
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="bidgen", description="投标文件生成助手")
+    parser = argparse.ArgumentParser(prog="bidgen", description="投标助手")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_conv = sub.add_parser("convert", help="将招标文件 PDF 转为 Word")

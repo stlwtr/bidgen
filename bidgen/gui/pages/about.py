@@ -22,7 +22,7 @@ class AboutPage(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         lay = QVBoxLayout(self)
-        title = QLabel("投标文件生成助手")
+        title = QLabel("投标助手")
         title.setStyleSheet("font-size:20px; font-weight:800;")
         lay.addWidget(title)
         lay.addWidget(QLabel(f"版本：{VERSION}（构建日期：{BUILD_DATE}）"))

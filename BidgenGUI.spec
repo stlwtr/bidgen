@@ -65,11 +65,14 @@ coll = COLLECT(
 )
 app = BUNDLE(
     coll,
-    name='BidgenGUI.app',
+    name='投标助手.app',
     icon='assets/logo.icns',
     bundle_identifier='BidgenGUI',
     info_plist={
         'CFBundleShortVersionString': _version,
+        # 显示名「投标助手」：Finder/Dock/启动台以此显示（.app 文件名保持 BidgenGUI 不动）
+        'CFBundleDisplayName': '投标助手',
+        'CFBundleName': '投标助手',
         # 声明可打开 PDF：拖放到 Dock/.app 图标与 Finder「打开方式」均依赖此声明；
         # Alternate + Viewer 表示不抢占系统默认 PDF 阅读器
         'CFBundleDocumentTypes': [

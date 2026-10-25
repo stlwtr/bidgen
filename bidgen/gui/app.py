@@ -33,7 +33,7 @@ _NAV = [
 class MainWindow(QMainWindow):
     def __init__(self, initial_pdf: str | None = None) -> None:
         super().__init__()
-        self.setWindowTitle("投标文件生成助手")
+        self.setWindowTitle("投标助手")
         self.resize(960, 760)
         self.store = SupplierStore()
 
@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         title_row.addWidget(logo_label)
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
-        title = QLabel("投标文件生成助手")
+        title = QLabel("投标助手")
         title.setObjectName("title")
         subtitle = QLabel(f"招标文件 PDF → 投标文件 Word　|　版本 {VERSION}（{BUILD_DATE}）")
         subtitle.setObjectName("subtitle")
@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction("缩小字号", lambda: self._scale_font(-0.1))
         help_menu = self.menuBar().addMenu("帮助")
         help_menu.addAction("使用向导…", self.show_guide)
-        help_menu.addAction("关于 投标文件生成助手…", self.show_about)
+        help_menu.addAction("关于 投标助手…", self.show_about)
 
     def _scale_font(self, delta: float) -> None:
         styles.set_font_scale(styles._FONT_SCALE + delta)  # noqa: SLF001
@@ -166,8 +166,8 @@ class MainWindow(QMainWindow):
     def show_about(self) -> None:
         QMessageBox.about(
             self,
-            "关于 投标文件生成助手",
-            f"<h3>投标文件生成助手</h3>"
+            "关于 投标助手",
+            f"<h3>投标助手</h3>"
             f"<p>版本：{VERSION}（构建日期：{BUILD_DATE}）</p>"
             f"<p>将政府采购招标文件 PDF 自动转换为结构规范、内容预填的投标文件 Word 初稿。</p>"
             f"<p>科创研发室提供支持。</p>",
@@ -176,7 +176,7 @@ class MainWindow(QMainWindow):
 
 def run_gui(initial_pdf: str | None = None) -> int:
     app = BidgenApplication(sys.argv)
-    app.setApplicationName("投标文件生成助手")
+    app.setApplicationName("投标助手")
     app.setStyleSheet(styles.qss())
     window = MainWindow(initial_pdf)
     # macOS 拖放到 Dock/图标（QFileOpenEvent）在事件循环内到达，先接信号再 exec

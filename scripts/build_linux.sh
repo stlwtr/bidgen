@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 投标文件生成助手 - Linux 一键打包脚本（生成 dist/BidgenGUI）
+# 投标助手 - Linux 一键打包脚本（生成 dist/BidgenGUI）
 set -e
 cd "$(dirname "$0")/.."
 

@@ -1,14 +1,13 @@
-"""PyInstaller 打包入口：投标文件生成助手（GUI）。
+"""PyInstaller 打包入口：投标助手（GUI）。
 
-各平台分别用 PyInstaller 打包生成原生可执行文件：
-- Windows: 生成 `投标文件生成助手.exe`
-- Linux:   生成 `投标文件生成助手`（可执行文件）
-- macOS:   生成 `投标文件生成助手.app`
+各平台分别用 PyInstaller 打包生成原生可执行文件（产物名为 BidgenGUI，
+macOS 经 Info.plist 的 CFBundleDisplayName 显示为「投标助手」）：
+- Windows: 生成 `BidgenGUI.exe`
+- Linux:   生成 `BidgenGUI`（可执行文件）
+- macOS:   生成 `BidgenGUI.app`
 
-用法（在对应平台上，已装好 .venv 依赖）：
-    .venv/bin/pyinstaller scripts/build_app.spec
-或一键脚本：
-    python3 scripts/build_app.py
+用法（macOS）：
+    bash scripts/build_macos.sh   # 一键打包并产出 DMG 安装镜像
 """
 
 import os
