@@ -24,16 +24,30 @@ Python 3.9+。依赖见 `requirements.txt`（已锁定 `PyMuPDF==1.24.14`，兼�
 
 ## 安装
 
+macOS / Linux：
+
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
+Windows（cmd 或 PowerShell，用 py 启动器）：
+
+```bat
+py -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+```
+
+> 直接用系统 Python 跑源码（如 `py -m bidgen gui`）会因缺依赖报 `ModuleNotFoundError`，必须先建 venv 并安装依赖。
+
 ## 使用
 
 ```bash
 # 图形界面（非技术人员推荐）：选择招标 PDF、填供应商信息、点生成
+# macOS / Linux:
 .venv/bin/python -m bidgen gui
+# Windows:
+.venv\Scripts\python -m bidgen gui
 
 # 启动时直接预填招标文件（可选）
 .venv/bin/python -m bidgen gui "docs/招标文件.pdf"
