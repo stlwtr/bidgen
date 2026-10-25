@@ -1,4 +1,4 @@
-# 投标文件生成助手 (bidgen)
+# 投标助手 (bidgen)
 
 将政府采购**招标文件 PDF** 自动转换为结构规范、内容预填的**投标文件 Word 初稿**，并额外产出招标文件 Word。
 
@@ -53,7 +53,7 @@ python3 -m venv .venv
 
 - **Windows**：双击 `scripts/build_windows.bat`（或命令行运行）→ `dist\BidgenGUI.exe`
 - **Linux**：`bash scripts/build_linux.sh` → `dist/BidgenGUI`
-- **macOS**：`bash scripts/build_macos.sh` → `dist/BidgenGUI.app`（打包配置唯一来源为 `BidgenGUI.spec`，含 Info.plist 文档类型声明）
+- **macOS**：`bash scripts/build_macos.sh` → `dist/投标助手-<版本>.dmg`（拖动到「应用程序」安装；打包配置唯一来源为 `BidgenGUI.spec`，含 Info.plist 文档类型声明与中文显示名；dmg 内含 `安装说明.txt`）
 
 > PyInstaller 不能跨平台打包，必须在目标平台上运行对应脚本。
 
