@@ -6,14 +6,16 @@ import os
 
 import yaml
 
+from .paths import suppliers_dir
+
 
 class SupplierStore:
     """把多个供应商配置存为 suppliers/<名称>.yaml，并记录当前使用的档案。"""
 
     _CURRENT_FILE = ".current"
 
-    def __init__(self, root: str = "suppliers") -> None:
-        self.root = root
+    def __init__(self, root: str | None = None) -> None:
+        self.root = root if root is not None else suppliers_dir()
         os.makedirs(self.root, exist_ok=True)
         if not self.list():
             self.save("默认供应商", {"company_type": "企业"})
