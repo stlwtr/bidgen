@@ -83,7 +83,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p_san = sub.add_parser("sanitize", help="清理已有 Word 的机器码 / 用户信息")
     p_san.add_argument("docx", help="待清理的 .docx 路径")
 
-    sub.add_parser("gui", help="启动图形界面（PySide6，方便非技术人员）")
+    p_gui = sub.add_parser("gui", help="启动图形界面（PySide6，方便非技术人员）")
+    p_gui.add_argument("pdf", nargs="?", default=None, help="可选：启动时预填的招标文件 PDF")
 
     return parser
 
@@ -112,8 +113,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"已清理：{args.docx}")
         elif args.command == "gui":
             from .gui import run_gui
+            from .gui.opener import pick_pdf
 
-            return run_gui()
+            return run_gui(pick_pdf([args.pdf] if args.pdf else []))
     except FileNotFoundError as exc:
         print(f"错误：找不到文件 {exc}", file=sys.stderr)
         return 1

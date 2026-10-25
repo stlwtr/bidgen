@@ -1,15 +1,13 @@
-"""QApplication 工厂与主窗口装配（侧边导航四页 + 首次引导 + 菜单 + run_gui）。"""
+"""QApplication 工厂与主窗口装配（侧边导航四页 + 菜单（帮助→使用向导） + run_gui）。"""
 
 from __future__ import annotations
 
-import json
-import os
 import sys
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
-    QApplication, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
+    QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
     QMainWindow, QMessageBox, QStackedWidget, QStyle, QVBoxLayout, QWidget,
 )
 
@@ -17,10 +15,12 @@ from . import styles
 from .pages.about import AboutPage
 from .pages.generate import GeneratePage
 from .pages.logs import LogsPage
+from .opener import BidgenApplication, local_files, pick_pdf
 from .pages.suppliers import SuppliersPage
+from .paths import resource_path
 from .store import SupplierStore
 from .version import BUILD_DATE, VERSION
-from .widgets import GuideDialog
+from .widgets import DropOverlay, GuideDialog
 
 _NAV = [
     ("生成", QStyle.SP_FileDialogNewFolder),
@@ -29,11 +29,9 @@ _NAV = [
     ("关于", QStyle.SP_MessageBoxInformation),
 ]
 
-_UI_STATE_FILE = os.path.join("suppliers", ".ui.json")
-
 
 class MainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, initial_pdf: str | None = None) -> None:
         super().__init__()
         self.setWindowTitle("投标文件生成助手")
         self.resize(960, 760)
@@ -45,13 +43,13 @@ class MainWindow(QMainWindow):
         lay.setContentsMargins(18, 14, 18, 14)
         lay.setSpacing(10)
 
-        self.setWindowIcon(QIcon("assets/logo.png"))
+        self.setWindowIcon(QIcon(resource_path("assets/logo.png")))
 
         title_row = QHBoxLayout()
         title_row.setSpacing(12)
         logo_label = QLabel()
         logo_label.setPixmap(
-            QPixmap("assets/logo.png").scaled(
+            QPixmap(resource_path("assets/logo.png")).scaled(
                 44, 44, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
         )
@@ -99,21 +97,71 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(styles.qss())
 
         self._build_menus()
-        self._maybe_show_guide()
+
+        # 主窗口接受拖放：PDF 拖到窗口任意位置均可打开（行为同拖到图标）
+        self.setAcceptDrops(True)
+        self._drop_overlay = DropOverlay(self.centralWidget())
+
+        if initial_pdf:
+            self.open_pdf(initial_pdf)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt 命名约定
+        super().resizeEvent(event)
+        self._drop_overlay.setGeometry(self.centralWidget().rect())
+
+    def dragEnterEvent(self, event) -> None:  # noqa: N802 - Qt 命名约定
+        paths = local_files(event.mimeData().urls())
+        if not paths:
+            event.ignore()
+            return
+        # 含本地文件即接受（无 PDF 时 drop 阶段给 Banner 反馈）；含 PDF 才显示遮罩预告可打开
+        event.acceptProposedAction()
+        if pick_pdf(paths) is not None:
+            self._drop_overlay.setVisible(True)
+            self._drop_overlay.raise_()
+
+    def dragLeaveEvent(self, event) -> None:  # noqa: N802 - Qt 命名约定
+        self._drop_overlay.setVisible(False)
+        super().dragLeaveEvent(event)
+
+    def dropEvent(self, event) -> None:  # noqa: N802 - Qt 命名约定
+        self._drop_overlay.setVisible(False)
+        paths = local_files(event.mimeData().urls())
+        if not paths:
+            event.ignore()
+            return
+        event.acceptProposedAction()
+        self.open_pdf(pick_pdf(paths) or paths[0])
 
     def _on_nav(self, row: int) -> None:
         self.pages.setCurrentIndex(row)
+
+    def open_pdf(self, path: str) -> None:
+        """外部打开招标文件（拖到图标 / argv 携带）：合法 PDF 预填并切到生成页，否则 Banner 提示。"""
+        if path.lower().endswith(".pdf"):
+            self.generate_page.error_banner.hide_banner()
+            self.generate_page.pdf_edit.setText(path)
+        else:
+            self.generate_page.error_banner.show_error(
+                "仅支持 PDF 招标文件", f"无法打开：{path}", []
+            )
+        self.nav.setCurrentRow(0)
 
     def _build_menus(self) -> None:
         view_menu = self.menuBar().addMenu("视图")
         view_menu.addAction("放大字号", lambda: self._scale_font(0.1))
         view_menu.addAction("缩小字号", lambda: self._scale_font(-0.1))
         help_menu = self.menuBar().addMenu("帮助")
+        help_menu.addAction("使用向导…", self.show_guide)
         help_menu.addAction("关于 投标文件生成助手…", self.show_about)
 
     def _scale_font(self, delta: float) -> None:
         styles.set_font_scale(styles._FONT_SCALE + delta)  # noqa: SLF001
         self.setStyleSheet(styles.qss())
+
+    def show_guide(self) -> None:
+        """使用向导：仅从「帮助」菜单手动打开，启动时不再自动弹出。"""
+        GuideDialog(self).exec()
 
     def show_about(self) -> None:
         QMessageBox.about(
@@ -125,35 +173,13 @@ class MainWindow(QMainWindow):
             f"<p>科创研发室提供支持。</p>",
         )
 
-    def _maybe_show_guide(self) -> None:
-        # 测试 / CI 可用 BIDGEN_NO_GUIDE=1 跳过模态引导页
-        if os.environ.get("BIDGEN_NO_GUIDE"):
-            return
-        if self._ui_state().get("dont_show_guide"):
-            return
-        dlg = GuideDialog(self)
-        if dlg.exec() and dlg.dont_show.isChecked():
-            self._save_ui_state({"dont_show_guide": True})
 
-    def _ui_state(self) -> dict:
-        try:
-            with open(_UI_STATE_FILE, encoding="utf-8") as handle:
-                return json.load(handle)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return {}
-
-    def _save_ui_state(self, data: dict) -> None:
-        state = self._ui_state()
-        state.update(data)
-        os.makedirs(os.path.dirname(_UI_STATE_FILE), exist_ok=True)
-        with open(_UI_STATE_FILE, "w", encoding="utf-8") as handle:
-            json.dump(state, handle, ensure_ascii=False)
-
-
-def run_gui() -> int:
-    app = QApplication(sys.argv)
+def run_gui(initial_pdf: str | None = None) -> int:
+    app = BidgenApplication(sys.argv)
     app.setApplicationName("投标文件生成助手")
     app.setStyleSheet(styles.qss())
-    window = MainWindow()
+    window = MainWindow(initial_pdf)
+    # macOS 拖放到 Dock/图标（QFileOpenEvent）在事件循环内到达，先接信号再 exec
+    app.pdf_opened.connect(window.open_pdf)
     window.show()
     return app.exec()

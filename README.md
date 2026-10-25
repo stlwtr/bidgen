@@ -12,6 +12,12 @@
 - 一级标题 Word 原生自动编号、页眉页脚页码、目录域（TOC）
 - 生成后清理文档**机器码 / 用户信息**（`rsids`、`python-docx` 等痕迹）
 
+## 下载
+
+已打包好的可执行文件（Windows / macOS / Linux）通过移动云盘分发，无需安装 Python：
+
+链接：https://yun.139.com/shareweb/#/w/i/2yA8F0iw0cR6e  提取码：40rd
+
 ## 环境
 
 Python 3.9+。依赖见 `requirements.txt`（已锁定 `PyMuPDF==1.24.14`，兼容 pdf2docx）。
@@ -28,7 +34,18 @@ python3 -m venv .venv
 ```bash
 # 图形界面（非技术人员推荐）：选择招标 PDF、填供应商信息、点生成
 .venv/bin/python -m bidgen gui
+
+# 启动时直接预填招标文件（可选）
+.venv/bin/python -m bidgen gui "docs/招标文件.pdf"
 ```
+
+也可以把招标文件 **PDF 直接拖到应用上打开**（自动预填并切到「生成」页，不会自动开始生成）：
+
+- **主窗口**：拖到窗口任意位置松手即可（含 PDF 时悬停会显示虚线框预告）
+- **macOS 图标**：拖到 Dock 图标或 `BidgenGUI.app` 图标，或 Finder 右键 PDF →「打开方式」
+- **Windows 图标**：拖到 `BidgenGUI.exe` 图标
+
+> 已知限制：Windows / Linux 每次拖放会启动一个新窗口（暂无单实例聚合）；macOS 拖入已运行的应用则复用当前窗口并替换已选 PDF。
 
 ## 打包可执行文件（Win / Linux / macOS，供非技术人员双击运行）
 
@@ -36,7 +53,7 @@ python3 -m venv .venv
 
 - **Windows**：双击 `scripts/build_windows.bat`（或命令行运行）→ `dist\BidgenGUI.exe`
 - **Linux**：`bash scripts/build_linux.sh` → `dist/BidgenGUI`
-- **macOS**：`bash scripts/build_macos.sh` → `dist/BidgenGUI.app`
+- **macOS**：`bash scripts/build_macos.sh` → `dist/BidgenGUI.app`（打包配置唯一来源为 `BidgenGUI.spec`，含 Info.plist 文档类型声明）
 
 > PyInstaller 不能跨平台打包，必须在目标平台上运行对应脚本。
 

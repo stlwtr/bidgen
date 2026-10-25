@@ -5,8 +5,10 @@ from __future__ import annotations
 import os
 import sys
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
-    QCheckBox, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel,
+    QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLabel,
     QPushButton, QToolButton, QVBoxLayout, QWidget,
 )
 
@@ -123,11 +125,11 @@ class Banner(QFrame):
 
 
 class GuideDialog(QDialog):
-    """首次启动引导页（三步图文 + 「不再显示」）。"""
+    """使用向导（三步图文）；仅从「帮助」菜单手动打开，启动时不再自动弹出。"""
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("欢迎使用 投标文件生成助手")
+        self.setWindowTitle("使用向导")
         self.setModal(True)
         self.resize(560, 430)
 
@@ -145,9 +147,38 @@ class GuideDialog(QDialog):
         steps.setWordWrap(True)
         lay.addWidget(steps, 1)
 
-        self.dont_show = QCheckBox("不再显示")
-        lay.addWidget(self.dont_show)
-
         buttons = QDialogButtonBox(QDialogButtonBox.Ok)
         buttons.accepted.connect(self.accept)
         lay.addWidget(buttons)
+
+
+class DropOverlay(QWidget):
+    """拖放悬停遮罩：虚线边框 + 居中文案。
+
+    仅在 dragEnter 检测到内容含 PDF 时显示，dragLeave / drop 后隐藏；
+    鼠标与拖放事件穿透到下层主窗口。
+    """
+
+    _TEXT = "松开以打开招标文件 PDF"
+
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setVisible(False)
+        self.setAcceptDrops(False)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+
+    def paintEvent(self, event) -> None:  # noqa: N802 - Qt 命名约定
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        overlay = QColor("#4a7dff")
+        painter.fillRect(self.rect(), QColor(74, 125, 255, 28))
+        pen = QPen(overlay, 3, Qt.DashLine)
+        painter.setPen(pen)
+        painter.drawRoundedRect(self.rect().adjusted(8, 8, -8, -8), 12, 12)
+        pen = QPen(QColor("#1f3b77"))
+        painter.setPen(pen)
+        font = painter.font()
+        font.setPointSize(16)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.drawText(self.rect(), Qt.AlignCenter, self._TEXT)

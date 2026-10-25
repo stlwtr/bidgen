@@ -14,13 +14,8 @@ echo "安装依赖..."
 python -m pip install --upgrade pip
 pip install -r requirements.txt pyinstaller
 
-echo "开始打包..."
-pyinstaller --onedir --windowed --name BidgenGUI \
-  --icon assets/logo.icns \
-  --add-data "assets:assets" \
-  --collect-all fitz --collect-all pdf2docx --collect-all cv2 \
-  --collect-all docx --collect-all yaml --collect-all bidgen \
-  --hidden-import PySide6 app_gui.py
+echo "开始打包（配置唯一来源：BidgenGUI.spec，含 Info.plist 文档类型声明）..."
+pyinstaller --clean --noconfirm BidgenGUI.spec
 
 echo ""
 echo "打包完成: dist/BidgenGUI.app（与 dist/BidgenGUI）"

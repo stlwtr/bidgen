@@ -50,6 +50,7 @@ class GeneratePage(QWidget):
         fl.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.pdf_edit = QLineEdit()
         self.pdf_edit.setReadOnly(True)
+        self.pdf_edit.setAcceptDrops(False)  # 拖放统一由主窗口接管（PDF 拖到窗口任意位置打开）
         self.pdf_edit.setPlaceholderText("选择招标文件 PDF…")
         self.pdf_edit.textChanged.connect(self._on_pdf_changed)
         pdf_btn = QPushButton("浏览…")
@@ -101,6 +102,7 @@ class GeneratePage(QWidget):
         lay.addWidget(QLabel("过程日志"))
         self.log = QTextEdit()
         self.log.setReadOnly(True)
+        self.log.setAcceptDrops(False)  # 同上：避免吞掉落在日志区的 PDF 拖放
         lay.addWidget(self.log, 1)
 
     # ------------------------------------------------------------------ #
