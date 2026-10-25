@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "build_date": "2026-10-23",
-  "download_url": "https://gitee.com/yanglishuan/bidgen/releases",
-  "notes": "初始版本"
+  "version": "1.1.0",
+  "build_date": "2026-10-25",
+  "download_url": "https://yun.139.com/shareweb/#/w/i/2yA8F0iw0cR6e",
+  "notes": "支持拖放 PDF 到应用图标打开；修复打包后双击打不开；启动异常落盘日志；向导改菜单手动打开"
 }

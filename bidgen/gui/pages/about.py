@@ -32,6 +32,15 @@ class AboutPage(QWidget):
         support = QLabel("科创研发室提供支持。")
         support.setStyleSheet("color:#4a5568; font-weight:600;")
         lay.addWidget(support)
+        # 下载链接与提取码：与 version.json 的 download_url 同源——更换云盘分享时需同步两处
+        # （此处改代码重打包，version.json 重传 COS）
+        download = QLabel(
+            '<a href="https://yun.139.com/shareweb/#/w/i/2yA8F0iw0cR6e">下载链接【移动云盘】</a>'
+            " 提取码：40rd"
+        )
+        download.setOpenExternalLinks(True)
+        download.setStyleSheet("color:#4a7dff;")
+        lay.addWidget(download)
         feedback = QLabel(
             '<a href="https://www.kdocs.cn/l/cj7LOlXOtrRH">问题反馈【金山文档 | WPS云文档】</a>'
         )
@@ -65,6 +74,7 @@ class AboutPage(QWidget):
         elif info.has_update:
             self.update_label.setText(
                 f"发现新版本 v{info.latest}！<a href='{info.download_url}'>点击下载</a>"
+                "（提取码见上方「下载链接」）"
             )
         else:
             self.update_label.setText(f"当前 v{info.current}，已是最新 ✓")
