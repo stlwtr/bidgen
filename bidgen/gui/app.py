@@ -175,8 +175,16 @@ class MainWindow(QMainWindow):
 
 
 def run_gui(initial_pdf: str | None = None) -> int:
+    # Windows 任务栏按 AppUserModelID 归类按钮与图标，须在创建 QApplication 前显式设置，
+    # 否则打包后的 exe 运行时任务栏不显示应用图标
+    if sys.platform == "win32":
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("BidgenGUI")
     app = BidgenApplication(sys.argv)
     app.setApplicationName("投标助手")
+    # 应用级图标：Windows 任务栏 / Alt-Tab 与 Linux 窗口（.ico 多尺寸）
+    app.setWindowIcon(QIcon(resource_path("assets/logo.ico")))
     app.setStyleSheet(styles.qss())
     window = MainWindow(initial_pdf)
     # macOS 拖放到 Dock/图标（QFileOpenEvent）在事件循环内到达，先接信号再 exec
