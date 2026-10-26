@@ -14,7 +14,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-from . import config, extract, fill, punctuation, structure
+from . import config, fill, punctuation, structure
 from .extract import Section
 from .style import StyleSpec
 
@@ -358,21 +358,13 @@ def _deviation_table(doc, ctx: BidContext, spec: StyleSpec,
 
 
 def _materials_section(doc, ctx: BidContext, spec: StyleSpec) -> None:
-    """各类证明材料（格式十六）：(一) 按类别附 资格审查/符合性审查/评分项 表格。"""
-    tech, biz = extract.split_scoring(ctx.scoring)
-    groups = [
-        ("1.资格审查", ctx.qualification),
-        ("2.符合性审查", ctx.compliance),
-        ("3.技术评审", tech),
-        ("4.商务评审", biz),
-    ]
+    """各类证明材料（格式十六）：暂时只保留两个标题，不生成内容。
+
+    设计意图：资格审查/符合性审查/评分项表格已在第四、五章编入，此处不再重复附表；
+    「其他资料」由投标人按招标要求自行补充。若将来要恢复按类别附表
+    （1.资格审查 / 2.符合性审查 / 3.技术评审 / 4.商务评审），从 git 历史找回旧实现。
+    """
     _add_heading(doc, "（一）招标文件要求提供的其他资料", 2, spec, numbered=False)
-    for title, section in groups:
-        _add_paragraph(doc, title, spec, space_before=2, space_after=2)
-        if section is not None and not section.is_empty():
-            for table_rows in section.tables:
-                _add_table(doc, table_rows, spec)
-                _add_paragraph(doc, "", spec, space_after=4)
     _add_heading(doc, "（二）投标人认为需提供的其他资料", 2, spec, numbered=False)
 
 
